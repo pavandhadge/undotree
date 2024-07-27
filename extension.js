@@ -12,39 +12,79 @@ function activate(context) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "undotree" is now active!');
+	
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('undotree.printtree', function () {
-		// The code you place here will be executed every time your command is executed
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+        // initialize initial text editor as a node on load
+        treeDataProvider.getUndoTreeForActiveEditor();
+        treeDataProvider.refresh();
+    });
 
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from undotree!');
-
-
-
-		const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No active text editor');
-            return;
+    vscode.commands.registerCommand('undotree.undo', () => {
+        const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+        if (!undoTree) return;
+        const text_buff = vscode.window.activeTextEditor?.document.getText() || '';
+        // if no change, don't do anything
+        if (text_buff !== undoTree.getCurrentNode().state) {
+            undoTree.addState(text_buff);
         }
+        undoTree.undo();
+        treeDataProvider.refresh();
+    });
 
-        // Get the entire text and copy it to the clipboard
-        const document = editor.document;
-        const entireText = document.getText();
-        vscode.env.clipboard.writeText(entireText).then(() => {
-            vscode.window.showInformationMessage('Copied entire text to clipboard');
-        }, (error) => {
-            vscode.window.showErrorMessage(`Failed to copy text: ${error}`);
-        });
+    vscode.commands.registerCommand('undotree.redo', () => {
+        const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+        if (!undoTree) return;
+        undoTree.redo(0); // Assuming single child for simplicity, takes the first in history
+        treeDataProvider.refresh();
+    });
 
-		console.log(entireText);
+    vscode.commands.registerCommand('undotree.saveAndAdvance', () => {
+        const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+        if (!undoTree) return;
+        const text_buff = vscode.window.activeTextEditor?.document.getText() || '';
+        // if no change, don't do anything
+        if (text_buff !== undoTree.getCurrentNode().state) {
+            const nodeCount = undoTree.addState(text_buff);
+            undoTree.redo(nodeCount - 1);
+            treeDataProvider.refresh();
+        }
+    });
 
-	});
+    vscode.commands.registerCommand('undotree.resetTree', () => {
+        const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+        if (!undoTree) return;
+        const newInitState = vscode.window.activeTextEditor?.document.getText() || '';
+        undoTree.reset(newInitState);
+        undoTree.addState(newInitState);
 
-	context.subscriptions.push(disposable);
+        treeDataProvider.refresh();
+    });
+
+    vscode.commands.registerCommand('undotree.toggleTimecode', () => {
+        const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+        if (!undoTree) return;
+        undoTree.toggleTimecode();
+        treeDataProvider.refresh();
+    });
+
+
+    vscode.commands.registerCommand('undotree.gotoState', (node) => {
+        const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+        if (!undoTree) return;
+        undoTree.gotoNode(node);
+        treeDataProvider.refresh();
+    });
+
+    vscode.commands.registerCommand('undotree.refreshTree', () => {
+        treeDataProvider.refresh();
+    });
+
+    // finish instantiation
+    treeDataProvider = new UndoTreeProvider();
+    vscode.window.registerTreeDataProvider('undoTreeView', treeDataProvider);
+
+	// context.subscriptions.push(disposable);
 }
 
 // This method is called when your extension is deactivated
