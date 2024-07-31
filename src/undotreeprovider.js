@@ -1,9 +1,13 @@
-import TreeNode from "./node";
-import UndoTree from "./undotree";
-import * as vscode from 'vscode';
-
+const TreeNode = require('./node'); // Ensure this path is correct
+const UndoTree = require('./undotree'); // Ensure this path is correct
+const vscode = require('vscode');
 
 class TreeNodeItem extends vscode.TreeItem {
+    /**
+     * @param {string} label - The label for the tree item.
+     * @param {TreeNode} node - The tree node associated with this item.
+     * @param {vscode.TreeItemCollapsibleState} [collapsibleState=vscode.TreeItemCollapsibleState.Expanded] - The collapsible state of the tree item.
+     */
     constructor(label, node, collapsibleState = vscode.TreeItemCollapsibleState.Expanded) {
         super(label, collapsibleState);
         this.node = node;
@@ -17,35 +21,36 @@ class TreeNodeItem extends vscode.TreeItem {
 }
 
 class UndoTreeProvider{
-    constructor(){
+    constructor() {
         this._onDidChangeTreeData = new vscode.EventEmitter();
-        this.onDidChangeTreeData = this._onDidChangeTreeData;
+        this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-        this. UndoTrees = new Map();
-    }
-    getTreeItem(element){
-        return element
+        this.undoTrees = new Map();
     }
 
-    getChildren(element) {
+    getTreeItem(element) {
+        return element;
+    }
+
+    async getChildren(element) {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            return Promise.resolve([]);
+            return [];
         }
 
         const uri = editor.document.uri.toString();
         const undoTree = this.undoTrees.get(uri);
 
         if (!undoTree) {
-            return Promise.resolve([]);
+            return [];
         }
 
         if (!element) {
-            return Promise.resolve(this.getTreeItems(undoTree.getRoot()));
+            return this.getTreeItems(undoTree.getRoot());
         }
-        return Promise.resolve(this.getTreeItems(element.node));
-    }
 
+        return this.getTreeItems(element.node);
+    }
 
     timeDifference(newDate, oldDate) {
         const msPerSecond = 1000;
@@ -73,13 +78,14 @@ class UndoTreeProvider{
     getTreeItems(node) {
         return node.children.map(child => {
             const isCurrent = child.hash === (this.getUndoTreeForActiveEditor() || {}).getCurrentNode()?.hash;
-            const showTimecode = this.getUndoTreeForActiveEditor()?.getShowTimecode();
+            const showTimecode = this.getUndoTreeForActiveEditor()?.getShowDateTimecode();
             return new TreeNodeItem(
-                `State ${child.count}${isCurrent ? ' *' : ''}${showTimecode ? `\t(${this.timeDifference(new Date().getTime(), child.datetime.getTime())} ago)` : ''}`,
+                `State ${child.count}${isCurrent ? ' *' : ''}${showTimecode ? `\t(${this.timeDifference(new Date(), child.datetime)} ago)` : ''}`,
                 child
             );
         });
     }
+
     ensureUndoTreeForDocument(document) {
         const uri = document.uri.toString();
         if (!this.undoTrees.has(uri)) {
@@ -103,4 +109,4 @@ class UndoTreeProvider{
     }
 }
 
-export default {UndoTreeProvider,TreeNodeItem};
+module.exports =UndoTreeProvider;

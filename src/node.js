@@ -1,4 +1,11 @@
 class TreeNode {
+    /**
+     * @param {string} state - The state of the node (string)
+     * @param {string} hash - Unique identifier (string)
+     * @param {Date} datetime - Timestamp (Date object)
+     * @param {number} count - Count or quantity (number)
+     * @param {TreeNode|null} [parent=null] - Parent TreeNode or null
+     */
     constructor(state, hash, datetime, count, parent = null) {
         this.state = state;            // The state of the node (string)
         this.children = [];           // Array of child TreeNodes
@@ -8,7 +15,11 @@ class TreeNode {
         this.count = count;           // Count or quantity (number)
     }
 
-    // Optionally, you can add methods to this class
+    /**
+     * Adds a child node to the current node.
+     * @param {TreeNode} childNode - The child node to add
+     * @throws {Error} If the provided childNode is not an instance of TreeNode
+     */
     addChild(childNode) {
         if (childNode instanceof TreeNode) {
             childNode.parent = this;
@@ -19,4 +30,4 @@ class TreeNode {
     }
 }
 
-export default TreeNode;
+module.exports = TreeNode;
