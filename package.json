@@ -84,17 +84,17 @@
     "keybindings": [
         {
             "command": "undotree.undo",
-            "key": "ctrl+alt+z",
+            "key": "ctrl+z",
             "when": "editorTextFocus"
         },
         {
             "command": "undotree.redo",
-            "key": "ctrl+alt+y",
+            "key": "ctrl+y",
             "when": "editorTextFocus"
         },
         {
             "command": "undotree.saveAndAdvance",
-            "key": "ctrl+y",
+            "key": "ctrl+s",
             "when": "editorTextFocus"
         }
     ]
