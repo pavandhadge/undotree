@@ -10,95 +10,99 @@
   "categories": [
     "Other"
   ],
-
   "main": "./src/extension.js",
   "contributes": {
     "menus": {
-        "view/title": [
-            {
-                "command": "undotree.undo",
-                "when": "view == undoTreeView",
-                "group": "navigation@1"
-            },
-            {
-                "command": "undotree.redo",
-                "when": "view == undoTreeView",
-                "group": "navigation@2"
-            },
-            {
-                "command": "undotree.saveAndAdvance",
-                "when": "view == undoTreeView",
-                "group": "navigation@3"
-            },
-            {
-                "command": "undotree.resetTree",
-                "when": "view == undoTreeView",
-                "group": "navigation@4"
-            }
-        ]
+      "view/title": [
+        {
+          "command": "undotree.undo",
+          "when": "view == undoTreeView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "undotree.redo",
+          "when": "view == undoTreeView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "undotree.saveAndAdvance",
+          "when": "view == undoTreeView",
+          "group": "navigation@3  "
+        },
+        {
+          "command": "undotree.resetTree",
+          "when": "view == undoTreeView",
+          "group": "navigation@4"
+        }
+      ]
     },
     "viewsContainers": {
-        "activitybar": [
-            {
-                "id": "undoTreeContainer",
-                "title": "Undo Tree",
-                "icon": "$(timeline-view-icon)"
-            }
-        ]
+      "activitybar": [
+        {
+          "id": "undoTreeContainer",
+          "title": "Undo Tree",
+          "icon": "$(timeline-view-icon)"
+        }
+      ]
     },
     "views": {
-        "undoTreeContainer": [
-            {
-                "id": "undoTreeView",
-                "name": "Undo Tree",
-                "contextualTitle": "Undo Tree"
-            }
-        ]
+      "undoTreeContainer": [
+        {
+          "id": "undoTreeView",
+          "name": "Undo Tree",
+          "contextualTitle": "Undo Tree"
+        }
+      ]
     },
     "commands": [
-        {
-            "command": "undotree.undo",
-            "title": "Undo Tree: Undo",
-            "icon": "$(debug-step-out)"
-        },
-        {
-            "command": "undotree.redo",
-            "title": "Undo Tree: Redo",
-            "icon": "$(debug-step-into)"
-        },
-        {
-            "command": "undotree.saveAndAdvance",
-            "title": "Undo Tree: Save and Advance",
-            "icon": "$(debug-step-over)"
-        },
-        {
-            "command": "undotree.resetTree",
-            "title": "Undo Tree: Reset",
-            "icon": "$(debug-restart)"
-        },
-        {
-            "command": "undotree.toggleTimecode",
-            "title": "Undo Tree: Toggle Showing Timecode"
-        }
+      {
+        "command": "undotree.undo",
+        "title": "Undo Tree: Undo",
+        "icon": "$(debug-step-out)"
+      },
+      {
+        "command": "undotree.redo",
+        "title": "Undo Tree: Redo",
+        "icon": "$(debug-step-into)"
+      },
+      {
+        "command": "undotree.saveAndAdvance",
+        "title": "Undo Tree: Save and Advance",
+        "icon": "$(debug-step-over)"
+      },
+      {
+        "command": "undotree.resetTree",
+        "title": "Undo Tree: Reset",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "undotree.toggleTimecode",
+        "title": "Undo Tree: Toggle Showing Timecode"
+      }
     ],
     "keybindings": [
-        {
-            "command": "undotree.undo",
-            "key": "ctrl+z",
-            "when": "editorTextFocus"
-        },
-        {
-            "command": "undotree.redo",
-            "key": "ctrl+y",
-            "when": "editorTextFocus"
-        },
-        {
-            "command": "undotree.saveAndAdvance",
-            "key": "ctrl+s",
-            "when": "editorTextFocus"
-        }
+      {
+        "command": "undotree.undo",
+        "key": "alt+z",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "undotree.redo",
+        "key": "ctrl+y",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "undotree.saveAndAdvance",
+        "key": "ctrl+s",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "undotree.selective",
+        "key": "alt+v",
+        "when": "editorTextFocus"
+      }
     ]
-},
+  },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
     "compile": "tsc -p ./",
@@ -117,7 +121,9 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "crypto": "^1.0.1"
-    
+    "acorn": "^8.12.1",
+    "acorn-walk": "^8.3.3",
+    "crypto": "^1.0.1",
+    "fuse.js": "^7.0.0"
   }
 }

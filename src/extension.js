@@ -3,7 +3,7 @@
 const vscode = require('vscode');
 const UndoTreeProvider = require('./undotreeprovider.js');
 const UndoTree = require('./undotree.js');
-
+const selective = require('./selective.js')
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 function activate(context) {
@@ -19,6 +19,8 @@ function activate(context) {
             treeDataProvider.refresh();
         }
     });
+
+
 
     // Register commands
     context.subscriptions.push(
@@ -72,6 +74,15 @@ function activate(context) {
             if (!undoTree) return;
             undoTree.gotoNode(node);
             treeDataProvider.refresh();
+        }),
+        vscode.commands.registerCommand('undotree.selective', (node ) => {
+            const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+            console.log(undoTree);
+            const root = undoTree.getRoot();
+            if (!undoTree) return;
+            console.log(typeof(selective))
+            selective(node,root);
+            // treeDataProvider.refresh();
         }),
 
         vscode.commands.registerCommand('undotree.refreshTree', () => {
