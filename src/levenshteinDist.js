@@ -41,27 +41,27 @@ function relativeThreshold(s1, s2, percentage) {
 
 
 // Example usage:
-const s1 = `    ClassExpression(node) {
-      // console.log("what a node contains : ",node)
-      const classBody = code.substring(node.body.start, node.body.end);
-      const normalisedBody = normalizeCode(classBody);
-      classes.push({ name: node.id ? node.id.name : node.type, code: classBody , normalisedBody : normalisedBody });
-    }`;
-const s2 = `    ClassDeclaration(node) {
+// const s1 = `    ClassExpression(node) {
+//       // console.log("what a node contains : ",node)
+//       const classBody = code.substring(node.body.start, node.body.end);
+//       const normalisedBody = normalizeCode(classBody);
+//       classes.push({ name: node.id ? node.id.name : node.type, code: classBody , normalisedBody : normalisedBody });
+//     }`;
+// const s2 = `    ClassDeclaration(node) {
 
-      // console.log("what a node contains : ",node)
-      const classBody = code.substring(node.body.start, node.body.end);
-      const normalisedBody = normalizeCode(classBody);
-      classes.push({ name: node.id ? node.id.name : node.type, code: classBody ,normalisedBody : normalisedBody });
-    }`;
+//       // console.log("what a node contains : ",node)
+//       const classBody = code.substring(node.body.start, node.body.end);
+//       const normalisedBody = normalizeCode(classBody);
+//       classes.push({ name: node.id ? node.id.name : node.type, code: classBody ,normalisedBody : normalisedBody });
+//     }`;
 
 // const fixedThreshold = 3; // Fixed threshold
 
-const percentage = 45;  
+// const percentage = 45;  
 
-console.log(`Levenshtein distance between '${s1}' and '${s2}' is ${levenshteinDistance(s1, s2)}`);
+// console.log(`Levenshtein distance between '${s1}' and '${s2}' is ${levenshteinDistance(s1, s2)}`);
 
-console.log(`Using relative threshold: ${relativeThreshold(s1, s2, percentage) ? 'Similar' : 'Not Similar'}`);
+// console.log(`Using relative threshold: ${relativeThreshold(s1, s2, percentage) ? 'Similar' : 'Not Similar'}`);
 
 module.exports = {
     levenshteinDistance,

@@ -1,4 +1,7 @@
-// The module 'vscode' contains the VS Code extensibility API
+const parser = require('@babel/parser');
+
+// Sample code with intentional errors
+const code = `// The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const UndoTreeProvider = require('./undotreeprovider.js');
@@ -103,3 +106,39 @@ module.exports = {
     activate,
     deactivate
 };
+`;
+
+const ast = parser.parse(code, {
+    sourceType: 'module',
+    plugins: ['classProperties', 'optionalChaining', 'nullishCoalescingOperator'],
+});
+
+// Function to analyze the AST
+function analyzeAST(node, indent = 0) {
+    const spaces = ' '.repeat(indent);
+
+    // Check for specific node types
+    if (node.type === 'FunctionDeclaration') {
+        console.log(`${spaces}Function: ${node.id.name}`);
+    } else if (node.type === 'ClassDeclaration') {
+        console.log(`${spaces}Class: ${node.id.name}`);
+    } else if (node.type === 'ForStatement') {
+        console.log(`${spaces}For Loop`);
+    } else if (node.type === 'SwitchStatement') {
+        console.log(`${spaces}Switch Statement`);
+    } else if (node.type === 'IfStatement') {
+        console.log(`${spaces}If Statement`);
+    }
+
+    // Recursively analyze child nodes
+    for (const key in node) {
+        if (Array.isArray(node[key])) {
+            node[key].forEach(child => analyzeAST(child, indent + 2));
+        } else if (node[key] && typeof node[key] === 'object') {
+            analyzeAST(node[key], indent + 2);
+        }
+    }
+}
+
+// Start analyzing the AST
+analyzeAST(ast);
