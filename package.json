@@ -88,12 +88,12 @@
       },
       {
         "command": "undotree.redo",
-        "key": "ctrl+y",
+        "key": "alt+y",
         "when": "editorTextFocus"
       },
       {
         "command": "undotree.saveAndAdvance",
-        "key": "ctrl+s",
+        "key": "alt+s",
         "when": "editorTextFocus"
       },
       {
