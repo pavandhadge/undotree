@@ -43,11 +43,21 @@ function getWebviewContent() {
                     const container = document.getElementById('statesContainer');
                     container.innerHTML = ''; // Clear previous states
                     states.forEach(state => {
-                        console.log("working")
                         const pre = document.createElement('pre');
                         pre.classList.add('codediv');
                         pre.textContent = state; // Display each state in a <pre> tag
+
+                        // Create a button for each <pre>
+                        const button = document.createElement('button');
+                        button.textContent = 'Replace';
+                        button.onclick = () => {
+                            // When the button is clicked, send the state to the extension
+                            vscode.postMessage({ command: 'replaceText', data: state });
+                        };
+
+                        // Append the <pre> and button to the container
                         container.appendChild(pre);
+                        container.appendChild(button);
                     });
                 }
 
@@ -68,49 +78,60 @@ function getWebviewContent() {
     `;
 }
 
-
-
 function createWebview(allStat, context) {
     if (panel) {
-        // If the webview already exists, reveal it
-        panel.reveal(vscode.ViewColumn.One);
-    } else {
-        // Create a new webview panel
-        panel = vscode.window.createWebviewPanel(
-            'allStatesView', // Identifier
-            'All States', // Title
-            vscode.ViewColumn.Beside,// Show in the first half of the screen
-            {
-                enableScripts: true // Enable JavaScript in the webview
-            }
-        );
-
-        // Set the HTML content of the webview
-        panel.webview.html = getWebviewContent();
-
-        // Handle messages from the webview
-        panel.webview.onDidReceiveMessage(
-            message => {
-                switch (message.command) {
-                    case 'close':
-                        panel.dispose(); // Close the webview if needed
-                        panel = undefined;
-                        break;
-                }
-            },
-            undefined,
-            context.subscriptions
-        );
+        // If the webview already exists and is not disposed, reveal it
+        if (panel.viewType === 'allStatesView') {
+            panel.reveal(vscode.ViewColumn.One);
+            return; // Exit early since the webview is already active
+        } else {
+            // If the existing panel has been disposed, create a new one
+            panel = undefined;
+        }
     }
+
+    // Create a new webview panel
+    panel = vscode.window.createWebviewPanel(
+        'allStatesView', // Identifier
+        'All States', // Title
+        vscode.ViewColumn.Beside, // Show in the first half of the screen
+        {
+            enableScripts: true // Enable JavaScript in the webview
+        }
+    );
+
+    // Set the HTML content of the webview
+    panel.webview.html = getWebviewContent();
+
+    // Handle messages from the webview
+    panel.webview.onDidReceiveMessage(
+        message => {
+            switch (message.command) {
+                case 'close':
+                    panel.dispose(); // Close the webview if needed
+                    panel = undefined; // Set to undefined after disposal
+                    break;
+                case 'replaceText':
+                    const editor = vscode.window.activeTextEditor;
+                    if (editor) {
+                        const selection = editor.selection;
+                        editor.edit(editBuilder => {
+                            editBuilder.replace(selection, message.data); // Replace selected text
+                        });
+                    }
+                    break;
+            }
+        },
+        undefined,
+        context.subscriptions
+    );
 
     // Send the allStates data to the webview
     if (panel) {
-        console.log(allStat)
+        console.log(allStat);
         panel.webview.postMessage({ command: 'updateStates', data: allStat });
     }
 }
-
-
 
 
 
