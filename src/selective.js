@@ -82,7 +82,7 @@ function createWebview(allStat, context) {
     if (panel) {
         // If the webview already exists and is not disposed, reveal it
         if (panel.viewType === 'allStatesView') {
-            panel.reveal(vscode.ViewColumn.One);
+            panel.reveal(vscode.ViewColumn.Two);
             return; // Exit early since the webview is already active
         } else {
             // If the existing panel has been disposed, create a new one
@@ -94,7 +94,7 @@ function createWebview(allStat, context) {
     panel = vscode.window.createWebviewPanel(
         'allStatesView', // Identifier
         'All States', // Title
-        vscode.ViewColumn.Beside, // Show in the first half of the screen
+        vscode.ViewColumn.Two, // Show in the first half of the screen
         {
             enableScripts: true // Enable JavaScript in the webview
         }
@@ -110,6 +110,7 @@ function createWebview(allStat, context) {
                 case 'close':
                     panel.dispose(); // Close the webview if needed
                     panel = undefined; // Set to undefined after disposal
+                    console.log("panel : ", panel)
                     break;
                 case 'replaceText':
                     const editor = vscode.window.activeTextEditor;
@@ -126,9 +127,16 @@ function createWebview(allStat, context) {
         context.subscriptions
     );
 
+    panel.onDidDispose(() => {
+        panel = undefined; // Set panel to undefined on disposal
+        console.log("Webview closed by user.");
+        // Perform any additional cleanup or state updates here if needed
+    });
+
     // Send the allStates data to the webview
     if (panel) {
-        console.log(allStat);
+        // console.log(allStat);
+        console.log("checking if executed")
         panel.webview.postMessage({ command: 'updateStates', data: allStat });
     }
 }
