@@ -83,7 +83,7 @@ function activate(context) {
             const root = undoTree.getRoot();
             if (!undoTree) return;
             console.log(typeof(selective))
-            selective(node,root);
+            selective(node,root,context);
             // treeDataProvider.refresh();
         }),
 

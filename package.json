@@ -1,5 +1,6 @@
 {
   "name": "undotree",
+  "searchingAlgorithm" :"fuzzy" ,
   "displayName": "undotree",
   "description": "",
   "version": "0.0.1",

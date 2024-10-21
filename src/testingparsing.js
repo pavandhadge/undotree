@@ -8,7 +8,7 @@ function normalizeCode(code) {
   let normalized = code.replace(/\/\/[^\n]*\n/g, '\n');
   normalized = normalized.replace(/\/\*[\s\S]*?\*\//g, '');
   normalized = normalized.toLowerCase();
-  normalized = normalized.replace(/\s+/g, ' ').trim(); 
+  normalized = normalized.replace(/\s+/g, ' ').trim();
   return normalized;
 }
 
@@ -22,44 +22,79 @@ function parseJavaScript(code) {
 
   walk.simple(ast, {
     FunctionDeclaration(node) {
-      const functionBody = code.substring(node.body.start, node.body.end);
+      const functionBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(functionBody);
-      functions.push({ name: node.id ? node.id.name : node.type, code: functionBody, normalisedBody: normalisedBody });
+      const params = node.params.map(param => param.name); // Extract parameter names
+      functions.push({
+        name: node.id ? node.id.name : node.type,
+        params,
+        code: functionBody,
+        normalisedBody
+      });
     },
     FunctionExpression(node) {
-      const functionBody = code.substring(node.body.start, node.body.end);
+      const functionBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(functionBody);
-      functions.push({ name: node.id ? node.id.name : node.type, code: functionBody, normalisedBody: normalisedBody });
+      const params = node.params.map(param => param.name); // Extract parameter names
+      functions.push({
+        name: node.id ? node.id.name : 'anonymous',
+        params,
+        code: functionBody,
+        normalisedBody
+      });
     },
     ArrowFunctionExpression(node) {
-      const functionBody = code.substring(node.body.start, node.body.end);
+      const functionBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(functionBody);
-      functions.push({ name: node.type, code: functionBody, normalisedBody: normalisedBody });
+      const params = node.params.map(param => param.name); // Extract parameter names
+      functions.push({
+        name: 'anonymous',
+        params,
+        code: functionBody,
+        normalisedBody
+      });
     },
     ClassDeclaration(node) {
-      const classBody = code.substring(node.body.start, node.body.end);
+      const classBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(classBody);
-      classes.push({ name: node.id ? node.id.name : node.type, code: classBody, normalisedBody: normalisedBody });
+      classes.push({
+        name: node.id ? node.id.name : 'anonymous',
+        code: classBody,
+        normalisedBody
+      });
     },
     ClassExpression(node) {
-      const classBody = code.substring(node.body.start, node.body.end);
+      const classBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(classBody);
-      classes.push({ name: node.id ? node.id.name : node.type, code: classBody, normalisedBody: normalisedBody });
+      classes.push({
+        name: node.id ? node.id.name : 'anonymous',
+        code: classBody,
+        normalisedBody
+      });
     },
     IfStatement(node) {
       const ifBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(ifBody);
-      ifElseStatements.push({ code: ifBody, normalisedBody: normalisedBody });
+      ifElseStatements.push({
+        code: ifBody,
+        normalisedBody
+      });
     },
     ForStatement(node) {
       const forBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(forBody);
-      forLoops.push({ code: forBody, normalisedBody: normalisedBody });
+      forLoops.push({
+        code: forBody,
+        normalisedBody
+      });
     },
     SwitchStatement(node) {
       const switchBody = code.substring(node.start, node.end);
       const normalisedBody = normalizeCode(switchBody);
-      switchStatements.push({ code: switchBody, normalisedBody: normalisedBody });
+      switchStatements.push({
+        code: switchBody,
+        normalisedBody
+      });
     }
   });
 
