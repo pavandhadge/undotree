@@ -41,10 +41,10 @@ function getWebviewContent() {
                     border-radius: 10px;
                     padding: 20px;
                     margin-bottom: 20px;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    box-shadow:#333333 ;
                 }
                 .codediv {
-                    background-color: #2f2f2f;
+                    background-color: #292929;
                     border: 1px solid #ccc;
                     padding: 20px;
                     border-radius: 10px;
