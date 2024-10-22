@@ -44,7 +44,7 @@ function getWebviewContent() {
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
                 }
                 .codediv {
-                    background-color: #f8f9fa;
+                    background-color: #2f2f2f;
                     border: 1px solid #ccc;
                     padding: 20px;
                     border-radius: 10px;
@@ -53,14 +53,16 @@ function getWebviewContent() {
                     font-family: monospace;
                     overflow: auto;
                 }
-                .code-button {
-                    display: flex;
-                    
-                        margin-left: auto;
-                    
-                    margin-top: 10px;
-                }
+               .code-button {
+    display: flex;
+    align-items: flex-end; /* Corrected align-items */
+    justify-content: flex-end; /* Corrected justify-content */
+    margin-top: 10px;
+}
+
                 button {
+                    margin-left: 10px;
+                    margin-right: 10px;
                     padding: 8px 12px;
                     border: none;
                     background-color: #007acc;
