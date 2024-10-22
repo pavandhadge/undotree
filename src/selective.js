@@ -20,13 +20,13 @@ function getWebviewContent() {
             <style>
                 body {
                     font-family: Arial, sans-serif;
-                    background-color: #f4f4f9;
+                    background-color: #1e1e1e;
                     margin: 0;
                     padding: 20px;
                 }
                     
                 h1 {
-                    color: #333;
+                    color: #ffffff;
                     text-align: center;
                     margin-bottom: 20px;
                 }
@@ -36,16 +36,16 @@ function getWebviewContent() {
                     margin-top: 20px;
                 }
                 .state-item {
-                    background-color: #ffffff;
-                    border: 1px solid #ccc;
+                    background-color: #2f2f2f;
+                    // border: 1px solid #ccc;
                     border-radius: 10px;
                     padding: 20px;
                     margin-bottom: 20px;
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
                 }
                 .codediv {
-                    background-color: #2f2f2f;
-                    border: 1px solid #ccc;
+                    background-color: #1C1C1C;
+                    // border: 1px solid #ccc;
                     padding: 20px;
                     border-radius: 10px;
                     white-space: pre-wrap;

@@ -44,9 +44,12 @@ function activate(context) {
             treeDataProvider.refresh();
         }),
 
-        vscode.commands.registerCommand('undotree.saveAndAdvance', () => {
+        vscode.commands.registerCommand('undotree.saveAndAdvance', async () => {
             const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
             if (!undoTree) return;
+
+            await vscode.workspace.saveAll();
+
             const text_buff = vscode.window.activeTextEditor?.document.getText() || '';
             if (text_buff !== undoTree.getCurrentNode().state) {
                 const nodeCount = undoTree.addState(text_buff);
