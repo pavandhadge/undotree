@@ -21,6 +21,35 @@
   },
   "main": "./src/extension.js",
   "contributes": {
+      "configuration": {
+        "type": "object",
+        "title": "RewindCode Settings",
+        "properties": {
+          "undotree.searchingAlgorithm": {
+            "type": "string",
+            "enum": [
+              "fuzzy",
+              "levenshtein"
+            ],
+            "default": "fuzzy",
+            "description": "Choose the searching algorithm to use: 'fuzzy' or 'levenshtein'."
+          },
+          "undotree.fuzzyThreshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.15,
+            "description": "Set the threshold for fuzzy searching (0 to 1)."
+          },
+          "undotree.levinThreshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 50,
+            "description": "Set the threshold for Levenshtein distance (0 to 100)."
+          }
+        }
+      },
     "menus": {
       "view/title": [
         {

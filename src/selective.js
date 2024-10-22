@@ -5,11 +5,24 @@ const { TreeNode } = require('./node.js');
 const time = require('console')
 const { parseJavaScript } = require('./testingparsing.js')
 const { levenshteinDistance, isSimilar, relativeThreshold } = require('./levenshteinDist.js')
+// const { getConfig } = require('./extension.js')
 const Fuse = require('fuse.js')
 const packageJson = require("../package.json")
 const allStates = [];
-const fuzzyThreshold = parseFloat(packageJson.fuzzyThreshold) || 0.15;
-const Levinthreshold = parseInt(packageJson.levenshteinThreshold) || 50;
+
+let fuzzyThreshold = 0.15;
+let LevinThreshold = 50;
+let searchingAlgorithm = 'fuzzy';
+
+
+function updateConfiguration() {
+    const config = vscode.workspace.getConfiguration('undotree');
+    fuzzyThreshold = parseFloat(config.get('fuzzyThreshold')) || 0.15;
+    LevinThreshold = parseInt(config.get('LevinThreshold')) || 50;
+    searchingAlgorithm = config.get('searchingAlgorithm') || 'fuzzy';
+    console.log("sfgsdfgsdfsdfsdfsf", fuzzyThreshold, LevinThreshold, searchingAlgorithm)
+}
+
 
 let panel; // Declare panel globally
 function getWebviewContent() {
@@ -256,16 +269,6 @@ function createWebview(allStat, context) {
 
 
 
-
-
-
-
-
-
-
-
-
-
 function searchContent(content, query, code) {
     // console.log("content", content)
     // console.log("query",query)
@@ -301,7 +304,7 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
             console.log("check the current node for start of function", currentNode)
             lexSelected.functions.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, LevinThreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
@@ -317,7 +320,7 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.classes.forEach(element => {
             lexSelected.classes.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, LevinThreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
@@ -332,7 +335,7 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.ifElseStatements.forEach(element => {
             lexSelected.ifElseStatements.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, LevinThreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
@@ -347,7 +350,7 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.forLoops.forEach(element => {
             lexSelected.forLoops.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, LevinThreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
@@ -362,7 +365,7 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.switchStatements.forEach(element => {
             lexSelected.switchStatements.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, LevinThreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
@@ -387,8 +390,10 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
     return { success: true, data: uniqueStates };
 }
 
-const selective = (node, rootNode, context) => {
+const selective = (node, rootNode, context,) => {
     const editor = vscode.window.activeTextEditor;
+    updateConfiguration();
+    console.log("checking if variables work properly : ", LevinThreshold, fuzzyThreshold, searchingAlgorithm)
     if (editor) {
         const selection = editor.selection;
 
@@ -397,9 +402,9 @@ const selective = (node, rootNode, context) => {
         const lexSelected = parseJavaScript(selectedText);
         // console.log("\nlexed selected code : ", lexSelected);
         //levenshtein fuzzy these are two options
-        const newStates = DFStraversing(rootNode, lexSelected, packageJson.searchingAlgorithm, context);
+        const newStates = DFStraversing(rootNode, lexSelected, searchingAlgorithm, context);
         // console.log("\n\nthese are all states : ", newStates);
-        
+
         // console.log("length = ",allStates.length)
         // if (newStates.success === 'true') {
 
