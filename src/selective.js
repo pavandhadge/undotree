@@ -24,16 +24,24 @@ function getWebviewContent() {
                     margin: 0;
                     padding: 20px;
                 }
+                    
                 h1 {
                     color: #333;
                     text-align: center;
                     margin-bottom: 20px;
                 }
                 #statesContainer {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 20px;
+                    display: flex;
+                    flex-direction: column;
                     margin-top: 20px;
+                }
+                .state-item {
+                    background-color: #ffffff;
+                    border: 1px solid #ccc;
+                    border-radius: 10px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
                 }
                 .codediv {
                     background-color: #f8f9fa;
@@ -44,12 +52,12 @@ function getWebviewContent() {
                     word-wrap: break-word;
                     font-family: monospace;
                     overflow: auto;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                    position: relative;
                 }
                 .code-button {
                     display: flex;
-                    justify-content: space-between;
+                    
+                        margin-left: auto;
+                    
                     margin-top: 10px;
                 }
                 button {
@@ -107,6 +115,11 @@ function getWebviewContent() {
                     const container = document.getElementById('statesContainer');
                     container.innerHTML = ''; // Clear previous states
                     states.forEach(state => {
+                        // Create a div for each state
+                        const stateDiv = document.createElement('div');
+                        stateDiv.classList.add('state-item');
+
+                        // Create a pre element for the code
                         const pre = document.createElement('pre');
                         pre.classList.add('codediv');
                         pre.textContent = state; // Display each state in a <pre> tag
@@ -130,13 +143,16 @@ function getWebviewContent() {
                             copyToClipboard(state);
                         };
 
-                        // Append buttons to container
+                        // Append buttons to button container
                         buttonContainer.appendChild(replaceButton);
                         buttonContainer.appendChild(copyButton);
 
-                        // Append the <pre> and button container to the main container
-                        container.appendChild(pre);
-                        container.appendChild(buttonContainer);
+                        // Append the pre and button container to the stateDiv
+                        stateDiv.appendChild(buttonContainer);
+                        stateDiv.appendChild(pre);
+
+                        // Append the stateDiv to the main container
+                        container.appendChild(stateDiv);
                     });
                 }
 
