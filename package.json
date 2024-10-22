@@ -3,9 +3,9 @@
   "publisher": "PavanDhadgeandTeam",
   "activationEvents": ["*"],
   "searchingAlgorithm": "fuzzy",
-  "displayName": "undotree",
+  "displayName": "RewindCode",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "icon": "./images/image.png",
   "engines": {
     "vscode": "^1.54.0"
