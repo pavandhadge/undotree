@@ -34,9 +34,9 @@ The following commands are available within the extension:
 
 
 ## Reference Images
-
-![Selective code operations](./images/selective.png)
 ![Sidebar](./images/sidebar.png)
+![Selective code operations](./images/selective.png)
+
 
 
 ## Installation
