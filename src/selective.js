@@ -41,11 +41,13 @@ function getWebviewContent() {
                     border-radius: 10px;
                     padding: 20px;
                     margin-bottom: 20px;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    box-shadow:#333333 ;
                 }
                 .codediv {
                     background-color: #1C1C1C;
                     // border: 1px solid #ccc;
+                    background-color: #292929;
+                    border: 1px solid #ccc;
                     padding: 20px;
                     border-radius: 10px;
                     white-space: pre-wrap;
@@ -121,7 +123,7 @@ function getWebviewContent() {
                         const stateDiv = document.createElement('div');
                         stateDiv.classList.add('state-item');
 
-                        // Create a pre element for the code
+                        // Create a pre element for the code +++++++++++++++++++++
                         const pre = document.createElement('pre');
                         pre.classList.add('codediv');
                         pre.textContent = state; // Display each state in a <pre> tag
