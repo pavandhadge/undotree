@@ -9,7 +9,6 @@ const Fuse = require('fuse.js')
 const allStates = [];
 
 let panel; // Declare panel globally
-
 function getWebviewContent() {
     return `
         <!DOCTYPE html>
@@ -19,11 +18,75 @@ function getWebviewContent() {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>All States</title>
             <style>
-                body { font-family: Arial, sans-serif; }
-                pre { white-space: pre-wrap; word-wrap: break-word; }
-                .codediv{
-                    border : 1px green solid;
-                    }
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f9;
+                    margin: 0;
+                    padding: 20px;
+                }
+                h1 {
+                    color: #333;
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                #statesContainer {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 20px;
+                    margin-top: 20px;
+                }
+                .codediv {
+                    background-color: #f8f9fa;
+                    border: 1px solid #ccc;
+                    padding: 20px;
+                    border-radius: 10px;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    font-family: monospace;
+                    overflow: auto;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    position: relative;
+                }
+                .code-button {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 10px;
+                }
+                button {
+                    padding: 8px 12px;
+                    border: none;
+                    background-color: #007acc;
+                    color: white;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    transition: background-color 0.3s ease;
+                }
+                button:hover {
+                    background-color: #005f99;
+                }
+                .copy-button {
+                    background-color: #28a745;
+                }
+                .copy-button:hover {
+                    background-color: #218838;
+                }
+                .notification {
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background-color: #28a745;
+                    color: white;
+                    padding: 12px;
+                    border-radius: 8px;
+                    display: none;
+                    opacity: 0;
+                    transition: opacity 0.3s ease-in-out;
+                }
+                .notification.show {
+                    display: block;
+                    opacity: 1;
+                }
             </style>
         </head>
         <body>
@@ -31,14 +94,15 @@ function getWebviewContent() {
             <div id="statesContainer"></div>
             <button onclick="closeWebview()">Close</button>
 
+            <div class="notification" id="copyNotification">Copied to clipboard!</div>
+
             <script>
                 const vscode = acquireVsCodeApi();
-                
+
                 function closeWebview() {
                     vscode.postMessage({ command: 'close' });
                 }
 
-                // Function to display states
                 function displayStates(states) {
                     const container = document.getElementById('statesContainer');
                     container.innerHTML = ''; // Clear previous states
@@ -47,31 +111,57 @@ function getWebviewContent() {
                         pre.classList.add('codediv');
                         pre.textContent = state; // Display each state in a <pre> tag
 
-                        // Create a button for each <pre>
-                        const button = document.createElement('button');
-                        button.textContent = 'Replace';
-                        button.onclick = () => {
-                            // When the button is clicked, send the state to the extension
+                        // Create a container for buttons
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.classList.add('code-button');
+
+                        // Create the Replace button
+                        const replaceButton = document.createElement('button');
+                        replaceButton.textContent = 'Replace';
+                        replaceButton.onclick = () => {
                             vscode.postMessage({ command: 'replaceText', data: state });
                         };
 
-                        // Append the <pre> and button to the container
+                        // Create the Copy button
+                        const copyButton = document.createElement('button');
+                        copyButton.textContent = 'Copy';
+                        copyButton.classList.add('copy-button');
+                        copyButton.onclick = () => {
+                            copyToClipboard(state);
+                        };
+
+                        // Append buttons to container
+                        buttonContainer.appendChild(replaceButton);
+                        buttonContainer.appendChild(copyButton);
+
+                        // Append the <pre> and button container to the main container
                         container.appendChild(pre);
-                        container.appendChild(button);
+                        container.appendChild(buttonContainer);
                     });
                 }
 
-                // Listen for messages from the extension
                 window.addEventListener('message', event => {
-                    const message = event.data; // The JSON message
+                    const message = event.data;
                     switch (message.command) {
                         case 'updateStates':
-                            // console.log(data);
-                            alert("hello");
-                            displayStates(message.data); // Update the displayed states
+                            displayStates(message.data);
                             break;
                     }
                 });
+
+                function copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showNotification();
+                    });
+                }
+
+                function showNotification() {
+                    const notification = document.getElementById('copyNotification');
+                    notification.classList.add('show');
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                    }, 2000);
+                }
             </script>
         </body>
         </html>
