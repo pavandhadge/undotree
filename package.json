@@ -5,8 +5,10 @@
   "searchingAlgorithm": "fuzzy",
   "displayName": "RewindCode",
   "description": "",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "icon": "./images/image.png",
+  "fuzzyThreshold":"0.15",
+  "Levinthreshold" :"50",
   "engines": {
     "vscode": "^1.54.0"
   },

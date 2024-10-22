@@ -6,7 +6,10 @@ const time = require('console')
 const { parseJavaScript } = require('./testingparsing.js')
 const { levenshteinDistance, isSimilar, relativeThreshold } = require('./levenshteinDist.js')
 const Fuse = require('fuse.js')
+const packageJson = require("../package.json")
 const allStates = [];
+const fuzzyThreshold = parseFloat(packageJson.fuzzyThreshold) || 0.15;
+const Levinthreshold = parseInt(packageJson.levenshteinThreshold) || 50;
 
 let panel; // Declare panel globally
 function getWebviewContent() {
@@ -71,7 +74,7 @@ function getWebviewContent() {
                     color: white;
                     border-radius: 5px;
                     cursor: pointer;
-                    transition: background-color 0.3s ease;
+                    transition: background-color 0.15s ease;
                 }
                 button:hover {
                     background-color: #005f99;
@@ -93,7 +96,7 @@ function getWebviewContent() {
                     border-radius: 8px;
                     display: none;
                     opacity: 0;
-                    transition: opacity 0.3s ease-in-out;
+                    transition: opacity 0.15s ease-in-out;
                 }
                 .notification.show {
                     display: block;
@@ -271,7 +274,7 @@ function searchContent(content, query, code) {
     const options = {
         includeScore: true,
         keys: ['content'], // We are searching in the 'content' field
-        // threshold: 0.7, // Adjust this value to control the sensitivity of the search
+        threshold: fuzzyThreshold, // Adjust this value to control the sensitivity of the search
     };
 
     const fuse = new Fuse(data, options); // Create a Fuse instance with the data
@@ -280,7 +283,7 @@ function searchContent(content, query, code) {
     return fuse.search(query);
     // console.log(result)
     // // allStates.push(result)
-    // if (result[0]?.score >= 0.7) {
+    // if (result[0]?.score >= fuzzyThreshold) {
     //     allStates.push(code)
     // }
     // return result;
@@ -298,12 +301,13 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
             console.log("check the current node for start of function", currentNode)
             lexSelected.functions.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, 50)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
                     const fuse = searchContent(element.normalisedBody, ele.normalisedBody);
-                    if (fuse[0]?.score >= 0.7) {
+                    console.log(fuse)
+                    if (fuse[0]?.score >= fuzzyThreshold) {
                         allStates.push(element.code);
                     }
                 }
@@ -313,12 +317,12 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.classes.forEach(element => {
             lexSelected.classes.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, 50)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
                     const fuse = searchContent(element.normalisedBody, ele.normalisedBody);
-                    if (fuse[0]?.score >= 0.7) {
+                    if (fuse[0]?.score >= fuzzyThreshold) {
                         allStates.push(element.code);
                     }
                 }
@@ -328,12 +332,12 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.ifElseStatements.forEach(element => {
             lexSelected.ifElseStatements.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, 50)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
                     const fuse = searchContent(element.normalisedBody, ele.normalisedBody);
-                    if (fuse[0]?.score >= 0.7) {
+                    if (fuse[0]?.score >= fuzzyThreshold) {
                         allStates.push(element.code);
                     }
                 }
@@ -343,12 +347,12 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.forLoops.forEach(element => {
             lexSelected.forLoops.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, 50)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
                     const fuse = searchContent(element.normalisedBody, ele.normalisedBody);
-                    if (fuse[0]?.score >= 0.7) {
+                    if (fuse[0]?.score >= fuzzyThreshold) {
                         allStates.push(element.code);
                     }
                 }
@@ -358,12 +362,12 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
         currentNode.lexResult.switchStatements.forEach(element => {
             lexSelected.switchStatements.forEach(ele => {
                 if (method === "levenshtein") {
-                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, 50)) {
+                    if (relativeThreshold(element.normalisedBody, ele.normalisedBody, Levinthreshold)) {
                         allStates.push(element.code);
                     }
                 } else {
                     const fuse = searchContent(element.normalisedBody, ele.normalisedBody);
-                    if (fuse[0]?.score >= 0.7) {
+                    if (fuse[0]?.score >= fuzzyThreshold) {
                         allStates.push(element.code);
                     }
                 }
@@ -378,8 +382,9 @@ const DFStraversing = (rootNode, lexSelected, method, context) => {
 
     // vscode.showInformationMessage("done traversing")
     console.timeEnd()
-    createWebview(allStates, context);
-    return { success: true, data: allStates };
+    const uniqueStates = [...new Set(allStates)];
+    createWebview(uniqueStates, context);
+    return { success: true, data: uniqueStates };
 }
 
 const selective = (node, rootNode, context) => {
@@ -392,8 +397,9 @@ const selective = (node, rootNode, context) => {
         const lexSelected = parseJavaScript(selectedText);
         // console.log("\nlexed selected code : ", lexSelected);
         //levenshtein fuzzy these are two options
-        const newStates = DFStraversing(rootNode, lexSelected, "fuzzy", context);
+        const newStates = DFStraversing(rootNode, lexSelected, packageJson.searchingAlgorithm, context);
         // console.log("\n\nthese are all states : ", newStates);
+        
         // console.log("length = ",allStates.length)
         // if (newStates.success === 'true') {
 
