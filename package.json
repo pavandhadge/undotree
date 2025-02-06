@@ -5,7 +5,7 @@
   "searchingAlgorithm": "fuzzy",
   "displayName": "RewindCode",
   "description": "",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "icon": "./images/image.png",
   "fuzzyThreshold":"0.15",
   "Levinthreshold" :"50",
