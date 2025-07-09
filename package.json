@@ -7,7 +7,7 @@
   "searchingAlgorithm": "fuzzy",
   "displayName": "RewindCode",
   "description": "",
-  "version": "0.2.2",
+  "version": "0.3.1",
   "icon": "./images/image.png",
   "engines": {
     "vscode": "^1.54.0"
@@ -87,6 +87,14 @@
       {
         "command": "undotree.toggleTimecode",
         "title": "Undo Tree: Toggle Showing Timecode"
+      },
+      {
+        "command": "rewindcode.recommendations",
+        "title": "RewindCode: Show Recommendations"
+      },
+      {
+        "command": "extension.showConfig",
+        "title": "Show RewindCode Config (Dev Only)"
       }
     ],
     "keybindings": [
