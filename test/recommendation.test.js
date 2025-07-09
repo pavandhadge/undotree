@@ -1,29 +1,15 @@
 const assert = require('assert');
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-const vscode = require('vscode');
-// const myExtension = require('../extension');
 const { recommendation } = require('../src/RecommendationSystem/recommendation');
 
-suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
-
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
-	});
-});
-
-suite('Recommendation System', () => {
-  test('Returns empty for empty AST body', () => {
+describe('Recommendation System (Logic Only)', () => {
+  it('Returns empty for empty AST body', () => {
     const rootNode = { parsed: { extracted: { FunctionDeclaration: [] } }, children: [] };
     const parsedData = { ast: { body: [] } };
     const result = recommendation(rootNode, parsedData);
     assert.deepStrictEqual(result, []);
   });
 
-  test('Returns empty if no matches above threshold', () => {
+  it('Returns empty if no matches above threshold', () => {
     const rootNode = {
       parsed: { extracted: { FunctionDeclaration: [{ code: 'foo', ast: { type: 'FunctionDeclaration' } }] } },
       children: []
@@ -33,12 +19,17 @@ suite('Recommendation System', () => {
     const orig = require('../src/RecommendationSystem/similarityIndex');
     const oldSim = orig.similarityIndex;
     orig.similarityIndex = () => 0;
+    // Patch getFuncRecommendations to return threshold = 0.1
+    const configStore = require('../src/Config/configStore');
+    const oldGet = configStore.getFuncRecommendations;
+    configStore.getFuncRecommendations = () => ({ threshold: 0.1 });
     const result = recommendation(rootNode, parsedData);
+    configStore.getFuncRecommendations = oldGet;
     orig.similarityIndex = oldSim;
     assert.deepStrictEqual(result, []);
   });
 
-  test('Respects maxResults and deduplication', () => {
+  it('Respects maxResults and deduplication', () => {
     const rootNode = {
       parsed: { extracted: { FunctionDeclaration: [
         { code: 'foo', ast: { type: 'FunctionDeclaration' } },
@@ -64,7 +55,7 @@ suite('Recommendation System', () => {
     assert.ok(result.includes('bar'));
   });
 
-  test('Limits traversal depth (maxDepth)', () => {
+  it('Limits traversal depth (maxDepth)', () => {
     // Build a deep tree
     let node = { parsed: { extracted: { FunctionDeclaration: [{ code: 'deep', ast: { type: 'FunctionDeclaration' } }] } }, children: [] };
     let root = node;
@@ -87,4 +78,4 @@ suite('Recommendation System', () => {
     // Should not traverse all 200 nodes
     assert.ok(result.length <= 11);
   });
-});
+}); 

@@ -94,40 +94,58 @@ function activate(context) {
       }
     }),
     vscode.commands.registerCommand("rewindcode.recommendations", async (node) => {
-      const config = getConfig();
-      if (config?.["func-recommendation"]?.active != true) {
-        vscode.window.showInformationMessage("Prev. version recommendation is turned off");
-        return;
+      try {
+        const config = getConfig();
+        if (config?.["func-recommendation"]?.active != true) {
+          vscode.window.showInformationMessage("Prev. version recommendation is turned off");
+          return;
+        }
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+          vscode.window.showInformationMessage("No active editor!");
+          return;
+        }
+        const selection = editor.selection;
+        const selectedText = editor.document.getText(selection);
+        if (!selectedText || selectedText.trim() === "") {
+          vscode.window.showInformationMessage("Please select some code to get recommendations.");
+          return;
+        }
+        const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
+        if (!undoTree) {
+          vscode.window.showInformationMessage("No undo tree found for this file.");
+          return;
+        }
+        const root = undoTree.getRoot();
+        let parsedData = null;
+        try {
+          if (config?.["func-recommendation"]?.active == true) {
+            parsedData = await parseCode(config?.["language"], config?.["framework"], selectedText);
+          }
+        } catch (parseErr) {
+          vscode.window.showErrorMessage("Could not parse the selected code: " + parseErr.message);
+          return;
+        }
+        if (!parsedData || !parsedData.ast || !parsedData.ast.body || parsedData.ast.body.length === 0) {
+          vscode.window.showInformationMessage("No valid code structure found in selection.");
+          return;
+        }
+        let suggestions = [];
+        try {
+          suggestions = recommendation(root, parsedData);
+        } catch (recErr) {
+          vscode.window.showErrorMessage("Error while generating recommendations: " + recErr.message);
+          return;
+        }
+        if (!suggestions || suggestions.length === 0) {
+          vscode.window.showInformationMessage("No similar previous versions found for the selected code.");
+          return;
+        }
+        createWebview(suggestions, context);
+        treeDataProvider.refresh();
+      } catch (err) {
+        vscode.window.showErrorMessage("Unexpected error in recommendations: " + (err && err.message ? err.message : err));
       }
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showInformationMessage("No active editor!");
-        return;
-      }
-      const file_buff = vscode.window.activeTextEditor?.document.getText() || "";
-
-      const selection = editor.selection;
-      const selectedText = editor.document.getText(selection);
-
-      const undoTree = treeDataProvider.getUndoTreeForActiveEditor();
-      if (!undoTree) return;
-
-      const root = undoTree.getRoot();
-      let parsedData = null;
-      // console.log("this is config : ", config, config?.["func-recommendation"], config?.["func-recommendation"]?.active)
-      if (config?.["func-recommendation"]?.active == true) {
-        parsedData = await parseCode(config?.["language"], config?.["framework"], selectedText);
-      }
-
-      console.log("Node Type:", typeof node, "\t", node);
-      console.log("Selected Text:", selectedText);
-      console.log("ast produced : ", parsedData);
-      let suggestions = recommendation(root, parsedData);
-
-      createWebview(suggestions, context);
-      console.log("suggestions given : ", suggestions);
-      treeDataProvider.refresh();
-
     }),
 
     vscode.commands.registerCommand("undotree.resetTree", () => {

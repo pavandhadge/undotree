@@ -1,14 +1,10 @@
 {
-    "language": {
-        "name": "javascript",
-        "version": "5.64"
-    },
-    "framework": {
-        "name": "react",
-        "version": "18.6.9"
-    },
+    "language": { "name": "javascript", "ismodule": true },
+    "framework": { "name": "react" },
     "func-recommendation": {
-        "active": true,
-        "thrushold": "0.7"
+      "active": true,
+      "threshold": 0.5,
+      "maxResults": 5,
+      "maxDepth": 10
     }
-}
+  }

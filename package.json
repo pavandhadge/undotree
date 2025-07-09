@@ -118,7 +118,28 @@
         "key": "alt+v",
         "when": "editorTextFocus"
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "RewindCode Settings",
+      "properties": {
+        "rewindcode.recommendation.threshold": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Similarity threshold for showing previous code recommendations (0-1). Higher means stricter matching."
+        },
+        "rewindcode.recommendation.maxResults": {
+          "type": "number",
+          "default": 10,
+          "description": "Maximum number of previous code recommendations to show."
+        },
+        "rewindcode.recommendation.maxDepth": {
+          "type": "number",
+          "default": 100,
+          "description": "Maximum depth to traverse the undo tree when searching for recommendations. Higher values may impact performance."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
@@ -134,7 +155,7 @@
     "@types/vscode": "^1.54.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
-    "eslint": "^8.57.0",
+    "eslint": "^8.57.1",
     "typescript": "^5.4.5"
   },
   "dependencies": {

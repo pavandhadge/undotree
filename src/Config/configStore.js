@@ -2,6 +2,12 @@ let config = {};
 let language = null;
 let framework = null;
 let funcRecommendation = null;
+let vscode;
+try {
+  vscode = require('vscode');
+} catch (e) {
+  vscode = null;
+}
 
 function setConfig(newConfig) {
     config = newConfig;
@@ -19,7 +25,16 @@ function getConfig() {
     return config;
 }
 function getFuncRecommendations() {
-    return funcRecommendation;
+    let rec = config?.["func-recommendation"] ? { ...config["func-recommendation"] } : {};
+    if (vscode) {
+      const userThreshold = vscode.workspace.getConfiguration('rewindcode.recommendation').get('threshold');
+      const userMaxResults = vscode.workspace.getConfiguration('rewindcode.recommendation').get('maxResults');
+      const userMaxDepth = vscode.workspace.getConfiguration('rewindcode.recommendation').get('maxDepth');
+      if (typeof userThreshold === 'number') rec.threshold = userThreshold;
+      if (typeof userMaxResults === 'number') rec.maxResults = userMaxResults;
+      if (typeof userMaxDepth === 'number') rec.maxDepth = userMaxDepth;
+    }
+    return rec;
 }
 function getLanguage() {
     return language;

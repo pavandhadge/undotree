@@ -32,9 +32,15 @@ class UndoTree {
     /**
      * Adds a new state to the tree.
      * @param {string} newState - The new state to be added.
+     * @param {object} parsedData - The parsed AST data for this state.
      * @returns {number} - The number of children after the new state is added.
      */
     addState(newState, parsedData = null) {
+        // If parsedData is not provided and the state is identical, reuse the previous parsed
+        let parsed = parsedData;
+        if (!parsed && this.#currentNode && this.#currentNode.state === newState) {
+            parsed = this.#currentNode.parsed;
+        }
         const newNode = {
             state: newState,
             children: [],
@@ -42,7 +48,7 @@ class UndoTree {
             hash: randomUUID(),
             datetime: new Date(),
             count: this.#stateCounter,
-            parsed: parsedData
+            parsed: parsed
         };
         this.#stateCounter++;
         this.#currentNode.children.push(newNode);
