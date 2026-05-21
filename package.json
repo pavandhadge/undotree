@@ -2,11 +2,31 @@
   "name": "RewindCode",
   "publisher": "PavanDhadgeandTeam",
   "activationEvents": [
-    "*"
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:cpp",
+    "onLanguage:c",
+    "onLanguage:csharp",
+    "onLanguage:rust",
+    "onLanguage:swift",
+    "onLanguage:kotlin",
+    "onLanguage:ruby",
+    "onLanguage:php",
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:bash",
+    "onLanguage:go",
+    "onCommand:undotree.undo",
+    "onCommand:undotree.redo",
+    "onCommand:undotree.saveAndAdvance",
+    "onCommand:undotree.resetTree",
+    "onCommand:undotree.toggleTimecode",
+    "onCommand:rewindcode.recommendations"
   ],
-  "searchingAlgorithm": "fuzzy",
   "displayName": "RewindCode",
-  "description": "",
+  "description": "Navigate code history with tree-based undo/redo and smart function recommendations",
   "version": "0.2.2",
   "icon": "./images/image.png",
   "engines": {
@@ -36,7 +56,7 @@
         {
           "command": "undotree.saveAndAdvance",
           "when": "view == undoTreeView",
-          "group": "navigation@3  "
+          "group": "navigation@3"
         },
         {
           "command": "undotree.resetTree",
@@ -67,26 +87,30 @@
       {
         "command": "undotree.undo",
         "title": "Undo Tree: Undo",
-        "icon": "$(debug-step-out)"
+        "icon": "$(arrow-small-up)"
       },
       {
         "command": "undotree.redo",
         "title": "Undo Tree: Redo",
-        "icon": "$(debug-step-into)"
+        "icon": "$(arrow-small-down)"
       },
       {
         "command": "undotree.saveAndAdvance",
         "title": "Undo Tree: Save and Advance",
-        "icon": "$(debug-step-over)"
+        "icon": "$(save)"
       },
       {
         "command": "undotree.resetTree",
         "title": "Undo Tree: Reset",
-        "icon": "$(debug-restart)"
+        "icon": "$(refresh)"
       },
       {
         "command": "undotree.toggleTimecode",
         "title": "Undo Tree: Toggle Showing Timecode"
+      },
+      {
+        "command": "rewindcode.recommendations",
+        "title": "RewindCode: Show Previous Versions"
       }
     ],
     "keybindings": [
@@ -107,17 +131,17 @@
       },
       {
         "command": "rewindcode.recommendations",
-        "key": "alt+v",
+        "key": "alt+r",
         "when": "editorTextFocus"
       }
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "yarn run compile && yarn run lint",
-    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext js",
     "test": "vscode-test"
   },
   "devDependencies": {
@@ -131,7 +155,6 @@
   },
   "dependencies": {
     "@swc/core": "^1.11.1",
-    "crypto": "^1.0.1",
     "tree-sitter": "^0.22.4",
     "tree-sitter-bash": "^0.23.3",
     "tree-sitter-c": "^0.23.5",
@@ -147,8 +170,7 @@
     "tree-sitter-python": "^0.23.6",
     "tree-sitter-ruby": "^0.23.1",
     "tree-sitter-rust": "^0.23.2",
-    "tree-sitter-swift": "^0.7.0",
-    "yarn": "^1.22.22"
+    "tree-sitter-swift": "^0.7.0"
   },
   "overrides": {
     "tree-sitter": "^0.22.4"

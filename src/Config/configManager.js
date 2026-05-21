@@ -4,36 +4,59 @@ const { setConfig } = require("./configStore");
 
 let lastFolder = null;
 let lastLoadedFile = null;
+let configLoadTimeout = null;
+
+function pathsMatchWithBoundary(dir, workspaceFolder) {
+    if (!dir.startsWith(workspaceFolder)) return false;
+    if (dir === workspaceFolder) return true;
+    return dir[workspaceFolder.length] === path.sep;
+}
 
 async function findUndotreeJson(filePath) {
     if (!vscode.workspace.workspaceFolders) return -1;
 
-    let dir = path.dirname(filePath);
-    const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    const dir = path.dirname(filePath);
 
-    while (dir.startsWith(workspaceFolder)) {
-        const jsonUri = vscode.Uri.file(path.join(dir, 'undotree.config.json'));
-        try {
-            await vscode.workspace.fs.stat(jsonUri);
-            const content = await vscode.workspace.fs.readFile(jsonUri);
-            const text = new TextDecoder().decode(content);
-            const newConfig = JSON.parse(text);
+    for (const workspaceFolder of vscode.workspace.workspaceFolders) {
+        const workspacePath = workspaceFolder.uri.fsPath;
+        if (!pathsMatchWithBoundary(dir, workspacePath)) continue;
 
-            if (jsonUri.fsPath === lastLoadedFile) {
-                return 0; // No update needed
+        let currentDir = dir;
+        while (pathsMatchWithBoundary(currentDir, workspacePath)) {
+            const jsonUri = vscode.Uri.file(path.join(currentDir, 'undotree.config.json'));
+            try {
+                await vscode.workspace.fs.stat(jsonUri);
+                const content = await vscode.workspace.fs.readFile(jsonUri);
+                const text = new TextDecoder().decode(content);
+
+                if (jsonUri.fsPath === lastLoadedFile) {
+                    return 0;
+                }
+
+                const parsedConfig = JSON.parse(text);
+                if (!parsedConfig || typeof parsedConfig !== 'object') {
+                    console.error(`Invalid config file format: ${jsonUri.fsPath}`);
+                    return -1;
+                }
+
+                lastLoadedFile = jsonUri.fsPath;
+                setConfig(parsedConfig);
+                return 1;
+            } catch (error) {
+                if (error.message.includes('ENOENT') || error.message.includes('FileNotFound')) {
+                    const parentDir = path.dirname(currentDir);
+                    if (parentDir === currentDir) break;
+                    currentDir = parentDir;
+                    continue;
+                }
+                if (error instanceof SyntaxError) {
+                    throw error;
+                }
+                const parentDir = path.dirname(currentDir);
+                if (parentDir === currentDir) break;
+                currentDir = parentDir;
             }
-
-            lastLoadedFile = jsonUri.fsPath;
-            setConfig(newConfig);
-            return 1; // Config updated
-        } catch (error) {
-            // Ignore errors, but log for debugging
-            console.error(`Error reading config file: ${error.message}`);
         }
-
-        const parentDir = path.dirname(dir);
-        if (parentDir === dir) break;
-        dir = parentDir;
     }
 
     return -1;
@@ -46,7 +69,22 @@ async function trackEditorChanges(editor) {
 
     if (folder !== lastFolder) {
         lastFolder = folder;
-        return await findUndotreeJson(filePath);
+
+        if (configLoadTimeout) {
+            clearTimeout(configLoadTimeout);
+        }
+
+        return new Promise((resolve) => {
+            configLoadTimeout = setTimeout(async () => {
+                try {
+                    const result = await findUndotreeJson(filePath);
+                    resolve(result);
+                } catch (error) {
+                    console.error("Error loading config:", error);
+                    resolve(-1);
+                }
+            }, 100);
+        });
     }
     return 0;
 }

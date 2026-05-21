@@ -1,14 +1,7 @@
-const { fdatasyncSync } = require('fs');
-const TreeNode = require('./node.js'); // Ensure this path is correct
-const UndoTree = require('./undotree.js'); // Ensure this path is correct
+const UndoTree = require('./undotree.js');
 const vscode = require('vscode');
 
 class TreeNodeItem extends vscode.TreeItem {
-    /**
-     * @param {string} label - The label for the tree item.
-     * @param {TreeNode} node - The tree node associated with this item.
-     * @param {vscode.TreeItemCollapsibleState} [collapsibleState=vscode.TreeItemCollapsibleState.Expanded] - The collapsible state of the tree item.
-     */
     constructor(label, node, collapsibleState = vscode.TreeItemCollapsibleState.Expanded) {
         super(label, collapsibleState);
         this.node = node;
@@ -27,6 +20,12 @@ class UndoTreeProvider {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
         this.undoTrees = new Map();
+
+        this._disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
+            if (editor) {
+                this.cleanupClosedEditors(editor.document.uri.toString());
+            }
+        });
     }
 
     getTreeItem(element) {
@@ -67,7 +66,7 @@ class UndoTreeProvider {
         } else if (difference < msPerHour) {
             const minutes = Math.floor(difference / msPerMinute);
             return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-        } else if (difference < msPerDay) {
+        } else if (difference < msPerHour) {
             const hours = Math.floor(difference / msPerHour);
             return `${hours} hour${hours !== 1 ? 's' : ''}`;
         } else {
@@ -77,9 +76,14 @@ class UndoTreeProvider {
     }
 
     getTreeItems(node) {
+        const undoTree = this.getUndoTreeForActiveEditor();
+        if (!undoTree) return [];
+
+        const currentNode = undoTree.getCurrentNode();
+        const showTimecode = undoTree.getShowDateTimecode();
+
         return node.children.map(child => {
-            const isCurrent = child.hash === (this.getUndoTreeForActiveEditor() || {}).getCurrentNode()?.hash;
-            const showTimecode = this.getUndoTreeForActiveEditor()?.getShowDateTimecode();
+            const isCurrent = currentNode && child.hash === currentNode.hash;
             return new TreeNodeItem(
                 `State ${child.count}${isCurrent ? ' *' : ''}${showTimecode ? `\t(${this.timeDifference(new Date(), child.datetime)} ago)` : ''}`,
                 child
@@ -92,7 +96,6 @@ class UndoTreeProvider {
         if (!this.undoTrees.has(uri)) {
             const newUndoTree = new UndoTree(document.getText());
             this.undoTrees.set(uri, newUndoTree);
-            newUndoTree.addState(document.getText());
         }
     }
 
@@ -103,6 +106,21 @@ class UndoTreeProvider {
         }
         this.ensureUndoTreeForDocument(editor.document);
         return this.undoTrees.get(editor.document.uri.toString());
+    }
+
+    cleanupClosedEditors(currentUri) {
+        const openUris = new Set(
+            vscode.window.visibleTextEditors.map(e => e.document.uri.toString())
+        );
+        for (const [uri] of this.undoTrees) {
+            if (uri !== currentUri && !openUris.has(uri)) {
+                this.undoTrees.delete(uri);
+            }
+        }
+    }
+
+    dispose() {
+        this._disposable.dispose();
     }
 
     refresh() {

@@ -8,13 +8,12 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "allowJs": true,
+        "allowJs": true
     },
-   "include": ["src"],  
+    "include": ["src"],
     "exclude": [
         "node_modules",
         ".vscode",
         "out"
     ]
 }
-

@@ -1,24 +1,27 @@
 const vscode = require('vscode');
 
+function getWebviewContent(states) {
+    const statesJson = JSON.stringify(states || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
-function getWebviewContent() {
     return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>All States</title>
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+            <title>Code Recommendations</title>
             <style>
                 body {
-                    font-family: Arial, sans-serif;
-                    background-color: #1e1e1e;
+                    font-family: var(--vscode-font-family);
+                    background-color: var(--vscode-editor-background);
+                    color: var(--vscode-editor-foreground);
                     margin: 0;
                     padding: 20px;
                 }
-                    
+
                 h1 {
-                    color: #ffffff;
+                    color: var(--vscode-editor-foreground);
                     text-align: center;
                     margin-bottom: 20px;
                 }
@@ -28,58 +31,56 @@ function getWebviewContent() {
                     margin-top: 20px;
                 }
                 .state-item {
-                    background-color: #2f2f2f;
-                    // border: 1px solid #ccc;
+                    background-color: var(--vscode-editor-inactiveSelectionBackground);
                     border-radius: 10px;
                     padding: 20px;
                     margin-bottom: 20px;
-                    box-shadow:#333333 ;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
                 }
                 .codediv {
-                    background-color: #1C1C1C;
-                    // border: 1px solid #ccc;
-                    background-color: #292929;
-                    border: 1px solid #ccc;
+                    background-color: var(--vscode-textBlockQuote-background);
+                    border: 1px solid var(--vscode-editor-lineHighlightBorder);
                     padding: 20px;
                     border-radius: 10px;
                     white-space: pre-wrap;
                     word-wrap: break-word;
-                    font-family: monospace;
+                    font-family: var(--vscode-editor-font-family);
                     overflow: auto;
+                    color: var(--vscode-editor-foreground);
                 }
                .code-button {
-    display: flex;
-    align-items: flex-end; /* Corrected align-items */
-    justify-content: flex-end; /* Corrected justify-content */
-    margin-top: 10px;
-}
+                    display: flex;
+                    align-items: flex-end;
+                    justify-content: flex-end;
+                    margin-top: 10px;
+                }
 
                 button {
                     margin-left: 10px;
                     margin-right: 10px;
                     padding: 8px 12px;
                     border: none;
-                    background-color: #007acc;
-                    color: white;
+                    background-color: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
                     border-radius: 5px;
                     cursor: pointer;
                     transition: background-color 0.15s ease;
                 }
                 button:hover {
-                    background-color: #005f99;
+                    background-color: var(--vscode-button-hoverBackground);
                 }
                 .copy-button {
-                    background-color: #28a745;
+                    background-color: var(--vscode-terminal-ansiGreen);
                 }
                 .copy-button:hover {
-                    background-color: #218838;
+                    opacity: 0.8;
                 }
                 .notification {
                     position: fixed;
                     bottom: 20px;
                     left: 50%;
                     transform: translateX(-50%);
-                    background-color: #28a745;
+                    background-color: var(--vscode-terminal-ansiGreen);
                     color: white;
                     padding: 12px;
                     border-radius: 8px;
@@ -91,10 +92,21 @@ function getWebviewContent() {
                     display: block;
                     opacity: 1;
                 }
+                .no-suggestions {
+                    color: var(--vscode-descriptionForeground);
+                    text-align: center;
+                    padding: 40px;
+                    font-size: 16px;
+                }
+                .version-label {
+                    color: var(--vscode-descriptionForeground);
+                    font-size: 12px;
+                    margin-bottom: 10px;
+                }
             </style>
         </head>
         <body>
-            <h1>All States</h1>
+            <h1>Previous Versions</h1>
             <div id="statesContainer"></div>
             <button onclick="closeWebview()">Close</button>
 
@@ -102,6 +114,7 @@ function getWebviewContent() {
 
             <script>
                 const vscode = acquireVsCodeApi();
+                const states = ${statesJson};
 
                 function closeWebview() {
                     vscode.postMessage({ command: 'close' });
@@ -109,29 +122,34 @@ function getWebviewContent() {
 
                 function displayStates(states) {
                     const container = document.getElementById('statesContainer');
-                    container.innerHTML = ''; // Clear previous states
-                    states.forEach(state => {
-                        // Create a div for each state
+                    container.innerHTML = '';
+
+                    if (!states || states.length === 0) {
+                        container.innerHTML = '<div class="no-suggestions">No previous versions found for this selection.</div>';
+                        return;
+                    }
+
+                    states.forEach((state, index) => {
                         const stateDiv = document.createElement('div');
                         stateDiv.classList.add('state-item');
 
-                        // Create a pre element for the code +++++++++++++++++++++
+                        const label = document.createElement('div');
+                        label.classList.add('version-label');
+                        label.textContent = 'Version ' + (index + 1) + ' of ' + states.length;
+
                         const pre = document.createElement('pre');
                         pre.classList.add('codediv');
-                        pre.textContent = state; // Display each state in a <pre> tag
+                        pre.textContent = state;
 
-                        // Create a container for buttons
                         const buttonContainer = document.createElement('div');
                         buttonContainer.classList.add('code-button');
 
-                        // Create the Replace button
                         const replaceButton = document.createElement('button');
                         replaceButton.textContent = 'Replace';
                         replaceButton.onclick = () => {
                             vscode.postMessage({ command: 'replaceText', data: state });
                         };
 
-                        // Create the Copy button
                         const copyButton = document.createElement('button');
                         copyButton.textContent = 'Copy';
                         copyButton.classList.add('copy-button');
@@ -139,27 +157,18 @@ function getWebviewContent() {
                             copyToClipboard(state);
                         };
 
-                        // Append buttons to button container
                         buttonContainer.appendChild(replaceButton);
                         buttonContainer.appendChild(copyButton);
 
-                        // Append the pre and button container to the stateDiv
-                        stateDiv.appendChild(buttonContainer);
+                        stateDiv.appendChild(label);
                         stateDiv.appendChild(pre);
+                        stateDiv.appendChild(buttonContainer);
 
-                        // Append the stateDiv to the main container
                         container.appendChild(stateDiv);
                     });
                 }
 
-                window.addEventListener('message', event => {
-                    const message = event.data;
-                    switch (message.command) {
-                        case 'updateStates':
-                            displayStates(message.data);
-                            break;
-                    }
-                });
+                displayStates(states);
 
                 function copyToClipboard(text) {
                     navigator.clipboard.writeText(text).then(() => {
@@ -180,45 +189,51 @@ function getWebviewContent() {
     `;
 }
 
-let panel = null; 
+const panels = new Map();
 
 function createWebview(allStat, context) {
-    if (panel) {
-        // If the webview already exists, reveal and update it
+    const editor = vscode.window.activeTextEditor;
+    const editorUri = editor?.document.uri.toString() || 'default';
+
+    if (panels.has(editorUri)) {
+        const panel = panels.get(editorUri);
         panel.reveal(vscode.ViewColumn.Two);
-        panel.webview.html = getWebviewContent(); // Ensure the content updates
-        panel.webview.postMessage({ command: 'updateStates', data: allStat });
+        panel.webview.html = getWebviewContent(allStat);
         return;
     }
 
-    // Create a new webview panel
-    panel = vscode.window.createWebviewPanel(
-        'allStatesView', // Identifier
-        'All States', // Title
-        vscode.ViewColumn.Two, // Show in the second column
+    const panel = vscode.window.createWebviewPanel(
+        'allStatesView',
+        'Previous Versions',
+        vscode.ViewColumn.Two,
         {
-            enableScripts: true, // Enable JavaScript in the webview
-            retainContextWhenHidden: true, // Keep the webview alive even when not visible
+            enableScripts: true,
+            retainContextWhenHidden: true,
         }
     );
 
-    // Set the HTML content of the webview
-    panel.webview.html = getWebviewContent();
+    panels.set(editorUri, panel);
 
-    // Wait for webview to load before sending data
+    panel.webview.html = getWebviewContent(allStat);
+
     panel.webview.onDidReceiveMessage(
         (message) => {
             switch (message.command) {
                 case 'close':
-                    panel.dispose(); // Close the webview
-                    panel = null;
+                    panel.dispose();
                     break;
                 case 'replaceText':
-                    const editor = vscode.window.activeTextEditor;
-                    if (editor) {
-                        const selection = editor.selection;
-                        editor.edit((editBuilder) => {
+                    const currentEditor = vscode.window.activeTextEditor;
+                    if (currentEditor && message.data && typeof message.data === 'string') {
+                        const selection = currentEditor.selection;
+                        currentEditor.edit((editBuilder) => {
                             editBuilder.replace(selection, message.data);
+                        }).then(success => {
+                            if (!success) {
+                                vscode.window.showErrorMessage("Failed to replace text");
+                            }
+                        }).catch(err => {
+                            vscode.window.showErrorMessage("Error replacing text: " + err.message);
                         });
                     }
                     break;
@@ -228,19 +243,9 @@ function createWebview(allStat, context) {
         context.subscriptions
     );
 
-    // Ensure panel is properly disposed when closed
     panel.onDidDispose(() => {
-        panel = null;
-        console.log("Webview closed by user.");
+        panels.delete(editorUri);
     });
-
-    // Ensure webview is ready before sending messages
-    setTimeout(() => {
-        if (panel) {
-            panel.webview.postMessage({ command: 'updateStates', data: allStat });
-        }
-    }, 500); // Small delay to allow webview to load
 }
 
-
-module.exports = { createWebview }
+module.exports = { createWebview };

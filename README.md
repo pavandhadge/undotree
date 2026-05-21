@@ -1,26 +1,27 @@
-# Undotree
+# RewindCode (Undotree)
 
-Undotree is a powerful VSCode extension designed to enhance the traditional undo-redo functionality by introducing a tree structure to track and navigate code changes more effectively. This extension provides developers with greater control over their development history, allowing them to view and restore previous versions of code without losing valuable information or trial-and-error attempts.
+RewindCode is a powerful VSCode extension designed to enhance the traditional undo-redo functionality by introducing a tree structure to track and navigate code changes more effectively. This extension provides developers with greater control over their development history, allowing them to view and restore previous versions of code without losing valuable information or trial-and-error attempts.
 
-With Undotree, developers no longer need to worry about the linear limitations of the standard undo-redo system. Whether you want to revisit different approaches, compare versions, or navigate complex coding structures, Undotree is here to simplify the process.
+With RewindCode, developers no longer need to worry about the linear limitations of the standard undo-redo system. Whether you want to revisit different approaches, compare versions, or navigate complex coding structures, RewindCode simplifies the process.
 
 ## Features
 
 - **Undo and Redo**: Navigate through different states of your code in a non-linear way using a tree structure.
 - **Save and Advance**: Save a point in the tree and move forward, ensuring that all your significant changes are preserved.
 - **Reset Tree**: Clear the undo tree and start fresh.
-- **Selective Undo/Redo**: Select a piece of code, view all previous versions of that specific snippet, and choose the version you want to replace or copy.
+- **Previous Versions**: Select a piece of code, view all previous versions of that specific snippet from history, and choose the version you want to replace or copy.
 - **Timecode Toggle**: Optionally display timecodes associated with different states for better tracking.
 
 ## Supported Languages
 
-Undotree currently supports the following programming languages:
+RewindCode currently supports the following programming languages:
 
 - **JavaScript (JS)**
 - **TypeScript (TS)**
 - **Python**
 - **Java**
 - **C++**
+- **C**
 - **C#**
 - **Go (Golang)**
 - **Rust**
@@ -28,21 +29,20 @@ Undotree currently supports the following programming languages:
 - **Kotlin**
 - **Ruby**
 - **HTML/CSS**
-- **SQL**
 - **PHP**
-- **PowerShell**
+- **Bash**
 
-Currently, **JavaScript (JS) and TypeScript (TS) are in production**, while the rest of the languages are in **testing and development stages**. - **PowerShell** and - **SQL** -support depricated .
+Currently, **JavaScript (JS) and TypeScript (TS) are in production**, while the rest of the languages are in **testing and development stages**.
 
 ## Commands
 
 The following commands are available within the extension:
 
+- `RewindCode: Show Previous Versions (alt+v)`: Select code and view all its previous versions from history.
 - `UndoTree: Undo (alt+z)`: Undo a change.
 - `UndoTree: Redo (alt+y)`: Redo a previously undone change.
 - `UndoTree: Save and Advance (alt+s)`: Save the current state and continue.
 - `UndoTree: Reset Tree`: Reset the entire undo tree.
-- `UndoTree: Selective Undo (alt+v)`: Select a piece of code, and view and manage its previous versions.
 - `UndoTree: Toggle Showing Timecode`: Toggle the visibility of timecodes associated with each state.
 
 ## Keybindings
@@ -52,7 +52,7 @@ The following commands are available within the extension:
 | Undo Tree: Undo                  | alt+z      |
 | Undo Tree: Redo                  | alt+y      |
 | Undo Tree: Save and Advance      | alt+s      |
-| Undo Tree: Selective Undo/Redo   | alt+v      |
+| RewindCode: Previous Versions    | alt+v      |
 
 ## Reference Images
 ![Sidebar](./images/sidebar.png)
@@ -66,25 +66,44 @@ The following commands are available within the extension:
 ```bash
 git clone https://github.com/pavandhadge/undotree.git
 cd undotree
-yarn install
+npm install
+```
+
+## Configuration
+
+Create an `undotree.config.json` file in your project root to customize behavior:
+
+```json
+{
+    "language": {
+        "name": "javascript",
+        "ismodule": true
+    },
+    "framework": {
+        "name": "react"
+    },
+    "func-recommendation": {
+        "active": true,
+        "threshold": 0.7
+    }
+}
 ```
 
 ## Development
 
-To develop and test this extension, ensure that you have Node.js and yarn installed. You can use the following scripts:
+To develop and test this extension, ensure that you have Node.js and npm installed. You can use the following scripts:
 
 ```bash
-yarn compile   # Compile the TypeScript source files.
-yarn watch     # Watch for changes and recompile automatically.
-yarn lint      # Lint the source code using ESLint.
-yarn test      # Run the test suite.
+npm run compile   # Compile the TypeScript source files.
+npm run watch     # Watch for changes and recompile automatically.
+npm run lint      # Lint the source code using ESLint.
+npm run test      # Run the test suite.
 ```
 
 ## Repository
 
-- **GitHub Repository:** [https://github.com/pavandhadge/undotree.git](https://github.com/pavandhadge/undotree.git)
+- **GitHub Repository:** [https://github.com/pavandhadge/undotree](https://github.com/pavandhadge/undotree)
 
 ## Maintainers
 
 - **Pavan Dhadge and Team**
-
