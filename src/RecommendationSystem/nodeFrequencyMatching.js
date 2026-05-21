@@ -20,13 +20,25 @@ function getChildren(node) {
     return children;
 }
 
-function getNodeFrequency(node, frequencyMap = {}) {
-    if (!node || typeof node !== "object") return frequencyMap;
+const frequencyCache = new WeakMap();
 
-    frequencyMap[node.type] = (frequencyMap[node.type] || 0) + 1;
+function mergeFrequency(target, source) {
+    Object.keys(source).forEach((key) => {
+        target[key] = (target[key] || 0) + source[key];
+    });
+    return target;
+}
 
-    getChildren(node).forEach((child) => getNodeFrequency(child, frequencyMap));
+function getNodeFrequency(node) {
+    if (!node || typeof node !== "object") return {};
+    if (frequencyCache.has(node)) return frequencyCache.get(node);
 
+    const frequencyMap = {};
+    if (node.type) frequencyMap[node.type] = 1;
+
+    getChildren(node).forEach((child) => mergeFrequency(frequencyMap, getNodeFrequency(child)));
+
+    frequencyCache.set(node, frequencyMap);
     return frequencyMap;
 }
 

@@ -221,6 +221,20 @@ function collectFeatures(node, features = { structure: [], identifiers: [], lite
   return features;
 }
 
+const featureCache = new WeakMap();
+
+function getCachedFeatures(node) {
+  if (!node || typeof node !== "object") {
+    return { structure: [], identifiers: [], literals: [], returns: [], returnTypes: [] };
+  }
+
+  if (featureCache.has(node)) return featureCache.get(node);
+
+  const features = collectFeatures(node);
+  featureCache.set(node, features);
+  return features;
+}
+
 function sequenceSimilarity(left, right) {
   if (left.length === 0 && right.length === 0) return 1;
   if (left.length === 0 || right.length === 0) return 0;
@@ -245,8 +259,8 @@ function sequenceSimilarity(left, right) {
 function semanticSimilarity(entry1, entry2) {
   const ast1 = entry1?.ast;
   const ast2 = entry2?.ast;
-  const features1 = collectFeatures(ast1);
-  const features2 = collectFeatures(ast2);
+  const features1 = getCachedFeatures(ast1);
+  const features2 = getCachedFeatures(ast2);
 
   const name1 = getEntryName(entry1);
   const name2 = getEntryName(entry2);

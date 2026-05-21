@@ -41,8 +41,23 @@ function getExtractionKey(nodeType, extracted) {
 function getNodeName(node, depth = 0) {
     if (!node || depth > 4) return "";
 
-    if (["identifier", "property_identifier", "field_identifier", "type_identifier"].includes(node.type) && node.text) {
+    if (["identifier", "property_identifier", "field_identifier", "type_identifier", "tag_name", "class_name", "id_name", "property_name"].includes(node.type) && node.text) {
         return node.text;
+    }
+
+    if (node.type === "element" && node.text) {
+        const tag = node.text.match(/^<\s*([A-Za-z0-9:_-]+)/)?.[1] || "";
+        const id = node.text.match(/\bid=["']([^"']+)["']/)?.[1] || "";
+        const className = node.text.match(/\bclass(?:Name)?=["']([^"']+)["']/)?.[1] || "";
+        return [tag, id, className].filter(Boolean).join(" ");
+    }
+
+    if ((node.type === "rule_set" || node.type === "selectors") && node.text) {
+        return node.text.split("{")[0].trim();
+    }
+
+    if (node.type === "declaration" && node.text) {
+        return node.text.split(":")[0].trim();
     }
 
     if (typeof node.childForFieldName !== "function") return "";

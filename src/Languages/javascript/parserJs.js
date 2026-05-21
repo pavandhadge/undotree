@@ -82,7 +82,29 @@ const extractCode = (n, code, minSpanStart) => {
   }
 };
 
-function extractAST(node, code, minSpanStart, extracted) {
+function getBindingName(node) {
+  return node?.value || node?.name || node?.id?.value || node?.id?.name || "";
+}
+
+function getParentAssignedName(parent) {
+  if (!parent) return "";
+
+  if (parent.type === "VariableDeclarator") {
+    return getBindingName(parent.id);
+  }
+
+  if (parent.type === "AssignmentExpression") {
+    return getBindingName(parent.left);
+  }
+
+  if (parent.type === "KeyValueProperty" || parent.type === "KeyValuePatternProperty") {
+    return getBindingName(parent.key);
+  }
+
+  return "";
+}
+
+function extractAST(node, code, minSpanStart, extracted, parent = null) {
   if (!node) return;
 
   if (node.type in extracted) {
@@ -92,10 +114,10 @@ function extractAST(node, code, minSpanStart, extracted) {
     };
 
     if (node.type === "FunctionDeclaration" || node.type === "FunctionExpression") {
-      entry.name = node.identifier ? node.identifier.value : "anonymous";
+      entry.name = node.identifier ? node.identifier.value : getParentAssignedName(parent) || "anonymous";
     }
     if (node.type === "ArrowFunctionExpression") {
-      entry.name = "anonymous";
+      entry.name = getParentAssignedName(parent) || "anonymous";
     }
     if (node.type === "MethodDefinition") {
       entry.name = node.key?.value || node.key?.name || "anonymous";
@@ -124,9 +146,9 @@ function extractAST(node, code, minSpanStart, extracted) {
   for (const key in node) {
     if (typeof node[key] === "object" && node[key] !== null) {
       if (Array.isArray(node[key])) {
-        node[key].forEach((child) => extractAST(child, code, minSpanStart, extracted));
+        node[key].forEach((child) => extractAST(child, code, minSpanStart, extracted, node));
       } else {
-        extractAST(node[key], code, minSpanStart, extracted);
+        extractAST(node[key], code, minSpanStart, extracted, node);
       }
     }
   }

@@ -1,4 +1,4 @@
-const { smartSimilarity } = require("./similarityIndex");
+const { smartSimilarityDetailed } = require("./similarityIndex");
 const { getFuncRecommendations, getLanguage, getFramework } = require("../Config/configStore");
 
 function flattenExtracted(extracted) {
@@ -9,6 +9,11 @@ function flattenExtracted(extracted) {
     .filter((element) => element && element.ast && typeof element.code === "string" && element.code.trim().length > 0);
 }
 
+/**
+ * Chooses the selected-code entries that historical snippets should be compared
+ * against. Exact extracted matches are preferred; otherwise larger entries are
+ * tried first so whole functions/components beat inner statements.
+ */
 function getCandidateEntries(parsedData, selectedText) {
   const extractedEntries = flattenExtracted(parsedData?.extracted);
   if (extractedEntries.length > 0) {
@@ -32,11 +37,84 @@ function isWholeFileMatch(elementCode, nodeState, selectedText) {
   return code.length > 0 && code === state && code !== selection;
 }
 
+function normalizeCodeForDedupe(code) {
+  return String(code || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getMaxNodeCount(startNode) {
+  let maxCount = 0;
+  const stack = startNode ? [startNode] : [];
+
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (typeof node.count === "number" && node.count > maxCount) {
+      maxCount = node.count;
+    }
+
+    if (node.children) {
+      for (let i = 0; i < node.children.length; i++) {
+        stack.push(node.children[i]);
+      }
+    }
+  }
+
+  return maxCount;
+}
+
+function getRecencyScore(node, maxNodeCount) {
+  if (typeof node?.count === "number" && maxNodeCount > 0) {
+    return Math.max(0, Math.min(1, node.count / maxNodeCount));
+  }
+
+  return 0.5;
+}
+
+function getMaxSuggestions(funcRecommendations) {
+  const parsed = Number.parseInt(funcRecommendations?.["max-suggestions"] ?? funcRecommendations?.maxSuggestions ?? "25", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
+}
+
+/**
+ * Lazy parsing is useful for speed but can retain many ASTs in long sessions.
+ * Keep it opt-in so the default recommendation path stays memory bounded.
+ */
+function shouldCacheLazyParse(funcRecommendations) {
+  return funcRecommendations?.["cache-parsed-history"] === true || funcRecommendations?.cacheParsedHistory === true;
+}
+
+/**
+ * Finds the strongest match between one historical snippet and all selected
+ * candidates. This supports selections that parse into more than one extracted
+ * entry, while still returning one score for ranking.
+ */
+function bestCandidateMatch(element, candidates, recencyScore) {
+  let best = { score: 0, reasons: {} };
+
+  candidates.forEach((candidate) => {
+    const result = smartSimilarityDetailed(element, candidate, { recencyScore });
+    if (result.score > best.score) {
+      best = result;
+    }
+  });
+
+  return best;
+}
+
+/**
+ * Walks the undo tree, parses states that do not already have extracted entries,
+ * scores candidate snippets, deduplicates by normalized code, and returns compact
+ * webview-safe suggestions capped by configuration.
+ */
 async function dfsIterative(startNode, candidates, parseFn, selectedText) {
   const funcRecommendations = getFuncRecommendations();
   if (!startNode) return [];
 
   const threshold = parseFloat(funcRecommendations?.["threshold"] ?? "0.7");
+  const maxSuggestions = getMaxSuggestions(funcRecommendations);
+  const cacheLazyParse = shouldCacheLazyParse(funcRecommendations);
+  const maxNodeCount = getMaxNodeCount(startNode);
   const stack = [startNode];
   const suggestions = [];
   const seen = new Set();
@@ -51,7 +129,9 @@ async function dfsIterative(startNode, candidates, parseFn, selectedText) {
         const parsed = await parseFn(node.state);
         if (parsed && parsed.extracted) {
           extracted = parsed.extracted;
-          node.parsed = parsed;
+          if (cacheLazyParse) {
+            node.parsed = parsed;
+          }
         }
       } catch (err) {
         // Skip this node if parsing fails
@@ -68,16 +148,21 @@ async function dfsIterative(startNode, candidates, parseFn, selectedText) {
     }
 
     const candidateArray = flattenExtracted(extracted);
+    const recencyScore = getRecencyScore(node, maxNodeCount);
     candidateArray.forEach((element) => {
       if (!element || !element.ast || !element.code) return;
       if (isWholeFileMatch(element.code, node.state, selectedText)) return;
 
-      const result = Math.max(...candidates.map((candidate) => smartSimilarity(element, candidate)));
-      if (result >= threshold) {
-        const codeKey = element.code.trim();
+      const result = bestCandidateMatch(element, candidates, recencyScore);
+      if (result.score >= threshold) {
+        const codeKey = normalizeCodeForDedupe(element.code);
         if (codeKey.length > 0 && !seen.has(codeKey)) {
           seen.add(codeKey);
-          suggestions.push({ code: element.code, similarity: result });
+          suggestions.push({
+            code: element.code,
+            similarity: result.score,
+            nodeCount: node.count,
+          });
         }
       }
     });
@@ -89,10 +174,16 @@ async function dfsIterative(startNode, candidates, parseFn, selectedText) {
     }
   }
 
-  suggestions.sort((a, b) => b.similarity - a.similarity);
-  return suggestions;
+  suggestions.sort((a, b) => {
+    if (b.similarity !== a.similarity) return b.similarity - a.similarity;
+    return (b.nodeCount || 0) - (a.nodeCount || 0);
+  });
+  return suggestions.slice(0, maxSuggestions).map(({ code, similarity }) => ({ code, similarity }));
 }
 
+/**
+ * Fallback for parsers that produce an AST but no `extracted` map.
+ */
 function getCandidateNode(parsedData) {
   if (!parsedData || !parsedData.ast) return null;
 
@@ -111,6 +202,9 @@ function getCandidateNode(parsedData) {
   return null;
 }
 
+/**
+ * Public recommendation entry point used by the VS Code command.
+ */
 async function recommendation(rootNode, parsedData, selectedText = "") {
   const candidates = getCandidateEntries(parsedData, selectedText);
   if (candidates.length === 0) {
