@@ -8,11 +8,9 @@ async function parseHTMLWithEmbeddedUsingTreeSitter(htmlCode) {
         if (!tree || !tree.rootNode) return null;
 
         const extracted = {
-            HTMLElement: [],
-            InlineCSS: [],
-            ExternalCSS: [],
-            InlineJS: [],
-            ExternalJS: [],
+            element: [],
+            script_element: [],
+            style_element: [],
         };
 
         extractAST(tree.rootNode, htmlCode, extracted);

@@ -50,7 +50,7 @@ async function parseCode(language, framework, code) {
   if (language.name === "javascript") {
     const config = {
       syntax: "ecmascript",
-      jsx: framework && ["react", "next.js", "solid"].includes(framework?.name),
+      jsx: Boolean(framework && ["react", "next.js", "solid"].includes(framework?.name)),
       isModule: language.ismodule ?? true,
       dynamicImport: true,
       minify: false,
@@ -62,7 +62,7 @@ async function parseCode(language, framework, code) {
   if (language.name === "typescript") {
     const config = {
       syntax: "typescript",
-      tsx: framework && ["react", "next.js", "solid"].includes(framework?.name),
+      tsx: Boolean(framework && ["react", "next.js", "solid"].includes(framework?.name)),
       isModule: language.ismodule ?? true,
       dynamicImport: true,
       minify: false,

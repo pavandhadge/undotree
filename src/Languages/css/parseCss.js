@@ -8,9 +8,10 @@ async function parseCssUsingTreeSitter(cssCode) {
         if (!tree || !tree.rootNode) return null;
 
         const extracted = {
+            rule_set: [],
+            declaration: [],
             selectors: [],
-            properties: [],
-            fullRules: [],
+            property_name: [],
         };
 
         extractAST(tree.rootNode, cssCode, extracted);

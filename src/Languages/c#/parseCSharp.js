@@ -8,6 +8,7 @@ async function parseCSharpUsingTreeSitter(code) {
         if (!tree || !tree.rootNode) return null;
 
         const extracted = {
+            LocalFunctionStatement: [],
             MethodDeclaration: [],
             ClassDeclaration: [],
             VariableDeclaration: [],

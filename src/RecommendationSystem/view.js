@@ -130,16 +130,21 @@ function getWebviewContent(states) {
                     }
 
                     states.forEach((state, index) => {
+                        const code = typeof state === 'string' ? state : state.code;
+                        const similarity = typeof state === 'object' && typeof state.similarity === 'number'
+                            ? Math.round(state.similarity * 100)
+                            : null;
                         const stateDiv = document.createElement('div');
                         stateDiv.classList.add('state-item');
 
                         const label = document.createElement('div');
                         label.classList.add('version-label');
-                        label.textContent = 'Version ' + (index + 1) + ' of ' + states.length;
+                        label.textContent = 'Version ' + (index + 1) + ' of ' + states.length +
+                            (similarity === null ? '' : ' - ' + similarity + '% match');
 
                         const pre = document.createElement('pre');
                         pre.classList.add('codediv');
-                        pre.textContent = state;
+                        pre.textContent = code;
 
                         const buttonContainer = document.createElement('div');
                         buttonContainer.classList.add('code-button');
@@ -147,14 +152,14 @@ function getWebviewContent(states) {
                         const replaceButton = document.createElement('button');
                         replaceButton.textContent = 'Replace';
                         replaceButton.onclick = () => {
-                            vscode.postMessage({ command: 'replaceText', data: state });
+                            vscode.postMessage({ command: 'replaceText', data: code });
                         };
 
                         const copyButton = document.createElement('button');
                         copyButton.textContent = 'Copy';
                         copyButton.classList.add('copy-button');
                         copyButton.onclick = () => {
-                            copyToClipboard(state);
+                            copyToClipboard(code);
                         };
 
                         buttonContainer.appendChild(replaceButton);

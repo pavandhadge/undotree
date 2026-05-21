@@ -1,7 +1,38 @@
-const { similarityIndex } = require("./similarityIndex");
+const { smartSimilarity } = require("./similarityIndex");
 const { getFuncRecommendations, getLanguage, getFramework } = require("../Config/configStore");
 
-async function dfsIterative(startNode, candidate, candidateType, parseFn) {
+function flattenExtracted(extracted) {
+  if (!extracted || typeof extracted !== "object") return [];
+
+  return Object.values(extracted)
+    .flat()
+    .filter((element) => element && element.ast && typeof element.code === "string" && element.code.trim().length > 0);
+}
+
+function getCandidateEntries(parsedData, selectedText) {
+  const extractedEntries = flattenExtracted(parsedData?.extracted);
+  if (extractedEntries.length > 0) {
+    const selectedTrimmed = selectedText?.trim();
+    const exactEntry = extractedEntries.find((entry) => entry.code.trim() === selectedTrimmed);
+
+    if (exactEntry) return [exactEntry];
+
+    return extractedEntries.sort((a, b) => b.code.length - a.code.length);
+  }
+
+  const candidateNode = getCandidateNode(parsedData);
+  return candidateNode ? [{ ast: candidateNode, code: selectedText || "" }] : [];
+}
+
+function isWholeFileMatch(elementCode, nodeState, selectedText) {
+  const code = elementCode.trim();
+  const state = (nodeState || "").trim();
+  const selection = (selectedText || "").trim();
+
+  return code.length > 0 && code === state && code !== selection;
+}
+
+async function dfsIterative(startNode, candidates, parseFn, selectedText) {
   const funcRecommendations = getFuncRecommendations();
   if (!startNode) return [];
 
@@ -36,11 +67,12 @@ async function dfsIterative(startNode, candidate, candidateType, parseFn) {
       continue;
     }
 
-    const candidateArray = extracted[candidateType] || [];
+    const candidateArray = flattenExtracted(extracted);
     candidateArray.forEach((element) => {
       if (!element || !element.ast || !element.code) return;
+      if (isWholeFileMatch(element.code, node.state, selectedText)) return;
 
-      const result = similarityIndex(element.ast, candidate);
+      const result = Math.max(...candidates.map((candidate) => smartSimilarity(element, candidate)));
       if (result >= threshold) {
         const codeKey = element.code.trim();
         if (codeKey.length > 0 && !seen.has(codeKey)) {
@@ -58,7 +90,7 @@ async function dfsIterative(startNode, candidate, candidateType, parseFn) {
   }
 
   suggestions.sort((a, b) => b.similarity - a.similarity);
-  return suggestions.map((s) => s.code);
+  return suggestions;
 }
 
 function getCandidateNode(parsedData) {
@@ -79,13 +111,11 @@ function getCandidateNode(parsedData) {
   return null;
 }
 
-async function recommendation(rootNode, parsedData) {
-  const candidateNode = getCandidateNode(parsedData);
-  if (!candidateNode) {
+async function recommendation(rootNode, parsedData, selectedText = "") {
+  const candidates = getCandidateEntries(parsedData, selectedText);
+  if (candidates.length === 0) {
     return [];
   }
-
-  const candidateType = candidateNode.type;
 
   const language = getLanguage();
   const framework = getFramework();
@@ -95,7 +125,7 @@ async function recommendation(rootNode, parsedData) {
     return parseCode(language, framework, code);
   } : null;
 
-  return dfsIterative(rootNode, candidateNode, candidateType, parseFn);
+  return dfsIterative(rootNode, candidates, parseFn, selectedText);
 }
 
 module.exports = { recommendation };

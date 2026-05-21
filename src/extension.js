@@ -124,7 +124,7 @@ function activate(context) {
         }
       }
 
-      const suggestions = await recommendation(root, parsedData);
+      const suggestions = await recommendation(root, parsedData, selectedText);
       createWebview(suggestions, context);
       treeDataProvider.refresh();
     }),

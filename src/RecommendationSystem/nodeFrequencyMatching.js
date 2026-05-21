@@ -1,15 +1,31 @@
+function getChildren(node) {
+    if (!node || typeof node !== "object") return [];
+
+    if (Array.isArray(node.children)) return node.children.filter(Boolean);
+
+    const children = [];
+    for (const key in node) {
+        if (["span", "loc", "range", "parent", "tree", "leadingComments", "trailingComments", "extra", "ctxt"].includes(key)) continue;
+
+        const value = node[key];
+        if (Array.isArray(value)) {
+            value.forEach((item) => {
+                if (item && typeof item === "object" && item.type) children.push(item);
+            });
+        } else if (value && typeof value === "object" && value.type) {
+            children.push(value);
+        }
+    }
+
+    return children;
+}
+
 function getNodeFrequency(node, frequencyMap = {}) {
     if (!node || typeof node !== "object") return frequencyMap;
 
     frequencyMap[node.type] = (frequencyMap[node.type] || 0) + 1;
 
-    for (const key in node) {
-        if (Array.isArray(node[key])) {
-            node[key].forEach((child) => getNodeFrequency(child, frequencyMap));
-        } else if (typeof node[key] === "object") {
-            getNodeFrequency(node[key], frequencyMap);
-        }
-    }
+    getChildren(node).forEach((child) => getNodeFrequency(child, frequencyMap));
 
     return frequencyMap;
 }

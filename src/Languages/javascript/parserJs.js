@@ -17,6 +17,8 @@ async function parseJsUsingSWC(code, config = null) {
       const extracted = {
         FunctionDeclaration: [],
         FunctionExpression: [],
+        ArrowFunctionExpression: [],
+        MethodDefinition: [],
         ImportDeclaration: [],
         VariableDeclaration: [],
         IfStatement: [],
@@ -92,11 +94,18 @@ function extractAST(node, code, minSpanStart, extracted) {
     if (node.type === "FunctionDeclaration" || node.type === "FunctionExpression") {
       entry.name = node.identifier ? node.identifier.value : "anonymous";
     }
+    if (node.type === "ArrowFunctionExpression") {
+      entry.name = "anonymous";
+    }
+    if (node.type === "MethodDefinition") {
+      entry.name = node.key?.value || node.key?.name || "anonymous";
+    }
     if (node.type === "ImportDeclaration") {
       entry.source = node.source?.value || "";
     }
     if (node.type === "VariableDeclaration") {
       entry.kind = node.kind;
+      entry.name = node.declarations?.[0]?.id?.value || node.declarations?.[0]?.id?.name || "anonymous";
     }
     if (node.type === "IfStatement") {
       entry.condition = extractCode(node.test, code, minSpanStart);

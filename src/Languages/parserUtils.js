@@ -27,15 +27,54 @@ function extractCode(node, sourceCode) {
     return sourceCode.slice(start, end);
 }
 
+function normalizeType(type) {
+    return String(type || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getExtractionKey(nodeType, extracted) {
+    if (nodeType in extracted) return nodeType;
+
+    const normalizedNodeType = normalizeType(nodeType);
+    return Object.keys(extracted).find((key) => normalizeType(key) === normalizedNodeType) || null;
+}
+
+function getNodeName(node, depth = 0) {
+    if (!node || depth > 4) return "";
+
+    if (["identifier", "property_identifier", "field_identifier", "type_identifier"].includes(node.type) && node.text) {
+        return node.text;
+    }
+
+    if (typeof node.childForFieldName !== "function") return "";
+
+    const nameNode = node.childForFieldName("name");
+    if (nameNode?.text) return nameNode.text;
+
+    const declarator = node.childForFieldName("declarator");
+    const declaratorName = getNodeName(declarator, depth + 1);
+    if (declaratorName) return declaratorName;
+
+    for (let i = 0; i < node.childCount; i++) {
+        const childName = getNodeName(node.child(i), depth + 1);
+        if (childName) return childName;
+    }
+
+    return "";
+}
+
 function extractAST(node, sourceCode, extracted) {
     if (!node) return;
 
-    if (node.type in extracted) {
+    const extractionKey = getExtractionKey(node.type, extracted);
+    if (extractionKey) {
         const entry = {
             code: extractCode(node, sourceCode),
             ast: node,
         };
-        extracted[node.type].push(entry);
+        const name = getNodeName(node);
+        if (name) entry.name = name;
+
+        extracted[extractionKey].push(entry);
     }
 
     for (let i = 0; i < node.childCount; i++) {

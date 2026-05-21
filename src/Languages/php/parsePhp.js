@@ -3,11 +3,12 @@ const PHPLang = require("tree-sitter-php");
 
 async function parsePHPUsingTreeSitter(code) {
     try {
-        const parser = getParser(PHPLang);
+        const parser = getParser(PHPLang.php || PHPLang);
         const tree = parser.parse(code);
         if (!tree || !tree.rootNode) return null;
 
         const extracted = {
+            function_definition: [],
             FunctionDeclaration: [],
             ClassDeclaration: [],
             MethodDeclaration: [],

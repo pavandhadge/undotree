@@ -8,6 +8,7 @@ async function parseRubyUsingTreeSitter(rubyCode) {
         if (!tree || !tree.rootNode) return null;
 
         const extracted = {
+            method: [],
             MethodDeclaration: [],
             ClassDeclaration: [],
             ModuleDeclaration: [],

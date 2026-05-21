@@ -1,11 +1,11 @@
 function getChildren(node) {
     if (!node || typeof node !== 'object') return [];
 
-    if (Array.isArray(node.children)) return node.children;
+    if (Array.isArray(node.children)) return node.children.filter(Boolean);
 
     const children = [];
     for (const key in node) {
-        if (key === 'span' || key === 'leadingComments' || key === 'trailingComments' || key === 'extra') continue;
+        if (['span', 'loc', 'range', 'parent', 'tree', 'leadingComments', 'trailingComments', 'extra', 'ctxt'].includes(key)) continue;
         if (Array.isArray(node[key])) {
             for (const item of node[key]) {
                 if (item && typeof item === 'object' && item.type) {
@@ -17,6 +17,11 @@ function getChildren(node) {
         }
     }
     return children;
+}
+
+function countNodes(node) {
+    if (!node || typeof node !== 'object') return 0;
+    return 1 + getChildren(node).reduce((total, child) => total + countNodes(child), 0);
 }
 
 function treeEditDistance(node1, node2) {
@@ -50,11 +55,9 @@ function treeEditDistance(node1, node2) {
         return dp[children1.length][children2.length] + cost;
     }
 
-    const children1Count = getChildren(node1).length;
-    const children2Count = getChildren(node2).length;
-    const maxSize = Math.max(children1Count, children2Count) + 1;
+    const maxSize = Math.max(countNodes(node1), countNodes(node2), 1);
     const distance = ted(node1, node2);
-    return 1 - distance / maxSize;
+    return Math.max(0, 1 - distance / maxSize);
 }
 
 module.exports = { treeEditDistance };
